@@ -4,7 +4,11 @@ const createAppRouter = () =>
   createBrowserRouter([
     {
       path: "/",
-      lazy: () => import("@/app/routes/home"),
+      lazy: () => import("@/app/routes/root"),
+      children: [
+        { index: true, lazy: () => import("@/app/routes/profiles") },
+        { path: "settings", lazy: () => import("@/app/routes/settings") },
+      ],
     },
     {
       path: "*",
