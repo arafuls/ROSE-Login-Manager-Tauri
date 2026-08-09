@@ -9,7 +9,13 @@ export type VaultErrorKind =
   | "wrong_passphrase"
   | "already_initialized"
   | "not_initialized"
+  | "invalid_recovery_key"
   | "unknown";
+
+/** Returned once by vaultSetup - never retrievable again after this. */
+export interface VaultSetupResult {
+  recoveryKey: string;
+}
 
 export class VaultError extends Error {
   readonly kind: VaultErrorKind;
@@ -29,6 +35,8 @@ function defaultMessageFor(kind: VaultErrorKind): string {
       return "The vault has already been set up.";
     case "not_initialized":
       return "The vault hasn't been set up yet.";
+    case "invalid_recovery_key":
+      return "That recovery key doesn't match.";
     default:
       return "Something went wrong with the vault.";
   }

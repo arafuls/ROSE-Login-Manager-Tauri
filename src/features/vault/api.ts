@@ -5,12 +5,17 @@
  */
 import { invoke } from "@tauri-apps/api/core";
 import { isBackendError } from "@/lib/tauri-errors";
-import { VaultError, type VaultErrorKind } from "./types";
+import {
+  VaultError,
+  type VaultErrorKind,
+  type VaultSetupResult,
+} from "./types";
 
 const KIND_MAP: Record<string, VaultErrorKind> = {
   wrong_passphrase: "wrong_passphrase",
   vault_already_initialized: "already_initialized",
   vault_not_initialized: "not_initialized",
+  invalid_recovery_key: "invalid_recovery_key",
 };
 
 /** Maps a rejected invoke() error to our typed VaultError. Unrecognized
@@ -27,9 +32,11 @@ export function vaultIsInitialized(): Promise<boolean> {
   return invoke("vault_is_initialized");
 }
 
-export async function vaultSetup(passphrase: string): Promise<void> {
+export async function vaultSetup(
+  passphrase: string
+): Promise<VaultSetupResult> {
   try {
-    await invoke("vault_setup", { passphrase });
+    return await invoke("vault_setup", { passphrase });
   } catch (error) {
     throw toVaultError(error);
   }
@@ -41,6 +48,21 @@ export async function vaultUnlock(passphrase: string): Promise<void> {
   } catch (error) {
     throw toVaultError(error);
   }
+}
+
+export async function vaultRecover(
+  recoveryKey: string,
+  newPassphrase: string
+): Promise<void> {
+  try {
+    await invoke("vault_recover", { newPassphrase, recoveryKey });
+  } catch (error) {
+    throw toVaultError(error);
+  }
+}
+
+export async function vaultReset(): Promise<void> {
+  await invoke("vault_reset");
 }
 
 export function vaultIsUnlocked(): Promise<boolean> {

@@ -45,6 +45,8 @@ fn main() {
             commands::vault::vault_is_initialized,
             commands::vault::vault_setup,
             commands::vault::vault_unlock,
+            commands::vault::vault_recover,
+            commands::vault::vault_reset,
             commands::vault::vault_is_unlocked,
             commands::vault::vault_lock,
             commands::profiles::profiles_list,

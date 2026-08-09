@@ -8,8 +8,9 @@
 //! see `crate::crypto`), so a separate IV column would just be redundant state that
 //! could drift out of sync with the ciphertext it belongs to.
 //!
-//! A second table, `vault_meta`, holds the single row of Argon2id salt + verifier
-//! blob used to unlock the vault (see `crate::crypto::vault`).
+//! A second table, `vault_meta`, holds the vault's key-wrapping data: a DEK
+//! (data-encryption key) independently wrapped under both a passphrase- and
+//! a recovery-key-derived key (see `crate::db::vault_meta`).
 //!
 //! `email` is declared `COLLATE NOCASE` so uniqueness (and every lookup) is
 //! case-insensitive - `Test@example.com` and `test@example.com` are the same
@@ -35,6 +36,8 @@ pub fn open(db_path: &Path) -> AppResult<Connection> {
 }
 
 fn migrate(conn: &Connection) -> AppResult<()> {
+    migrate_legacy_vault_meta(conn)?;
+
     conn.execute_batch(
         r#"
         CREATE TABLE IF NOT EXISTS profiles (
@@ -46,12 +49,37 @@ fn migrate(conn: &Connection) -> AppResult<()> {
         );
 
         CREATE TABLE IF NOT EXISTS vault_meta (
-            id       INTEGER PRIMARY KEY CHECK (id = 1),
-            salt     BLOB NOT NULL,
-            verifier BLOB NOT NULL
+            id                          INTEGER PRIMARY KEY CHECK (id = 1),
+            passphrase_salt             BLOB NOT NULL,
+            wrapped_dek_by_passphrase   BLOB NOT NULL,
+            recovery_salt               BLOB NOT NULL,
+            wrapped_dek_by_recovery     BLOB NOT NULL
         );
         "#,
     )?;
+    Ok(())
+}
+
+/// Pre-release schema change: `vault_meta` used to store a single
+/// passphrase-derived key directly (a `salt` + `verifier` pair), with no
+/// recovery-key support. That scheme can't be upgraded in place - the old
+/// key never wrapped a separate DEK, so there's nothing to carry forward,
+/// and the profiles it encrypted are structurally tied to it. Since this
+/// predates any real release, a vault found in the old shape is reset
+/// (dropped and recreated empty) rather than migrated.
+fn migrate_legacy_vault_meta(conn: &Connection) -> AppResult<()> {
+    let is_legacy_shape: bool = conn
+        .query_row(
+            "SELECT COUNT(*) FROM pragma_table_info('vault_meta') WHERE name = 'verifier'",
+            [],
+            |row| row.get::<_, i64>(0),
+        )
+        .map(|count| count > 0)
+        .unwrap_or(false);
+
+    if is_legacy_shape {
+        conn.execute_batch("DROP TABLE vault_meta; DROP TABLE IF EXISTS profiles;")?;
+    }
     Ok(())
 }
 

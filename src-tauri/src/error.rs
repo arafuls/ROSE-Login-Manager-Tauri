@@ -24,6 +24,9 @@ pub enum AppError {
     #[error("passphrase must be at least {min} characters")]
     PassphraseTooShort { min: usize },
 
+    #[error("that recovery key doesn't match")]
+    InvalidRecoveryKey,
+
     #[error("a profile with this email already exists")]
     DuplicateEmail,
 
@@ -63,6 +66,7 @@ impl AppError {
             AppError::VaultNotInitialized => "vault_not_initialized",
             AppError::WrongPassphrase => "wrong_passphrase",
             AppError::PassphraseTooShort { .. } => "passphrase_too_short",
+            AppError::InvalidRecoveryKey => "invalid_recovery_key",
             AppError::DuplicateEmail => "duplicate_email",
             AppError::ProfileNotFound => "profile_not_found",
             AppError::GameFolderNotSet => "game_folder_not_set",

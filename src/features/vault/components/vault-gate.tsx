@@ -1,6 +1,7 @@
 import { LoaderCircle } from "lucide-react";
 import type { ReactNode } from "react";
 import { useVault } from "@/features/vault/vault-provider";
+import { RecoveryKeyScreen } from "./recovery-key-screen";
 import { SetupScreen } from "./setup-screen";
 import { UnlockScreen } from "./unlock-screen";
 
@@ -22,6 +23,10 @@ export function VaultGate({ children }: { children: ReactNode }) {
 
   if (status === "needs-setup") {
     return <SetupScreen />;
+  }
+
+  if (status === "show-recovery-key") {
+    return <RecoveryKeyScreen />;
   }
 
   if (status === "locked") {

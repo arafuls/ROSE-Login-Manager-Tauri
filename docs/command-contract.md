@@ -21,6 +21,13 @@ is independently computable by any local process (WMI isn't privileged), it does
 swap, and it can't support cross-machine import/export. This rewrite uses a **user passphrase** instead
 (Argon2id-derived key), entered once to unlock the vault. This fixes all three problems at once.
 
+**Update:** a random DEK (data-encryption key) is generated at setup and wrapped independently under both
+the passphrase and a one-time recovery key shown once to the user - neither the passphrase nor the recovery
+key encrypts profile data directly. This means a forgotten passphrase is recoverable via the recovery key
+(`vault_recover`, which also lets the user set a new passphrase in the same step), and if *both* are lost,
+`vault_reset` wipes the vault as a last resort - there is deliberately no other way in, since a backdoor
+would defeat the point of encrypting the data at all.
+
 ## Types (mirror exactly in Rust `serde` structs and TypeScript types)
 
 ```ts
@@ -67,10 +74,12 @@ type ExportBundle = {
 
 ### Vault
 - `vault_is_initialized() -> bool` — false on first run, before any passphrase has been set.
-- `vault_setup(passphrase: string) -> void` — first-run only; errors if already initialized.
-- `vault_unlock(passphrase: string) -> void` — errors with a distinguishable "wrong passphrase" variant.
+- `vault_setup(passphrase: string) -> { recoveryKey: string }` — first-run only; errors if already initialized. The returned recovery key is shown to the user exactly once (never retrievable again) - the frontend must force acknowledgment (e.g. a "yes, I saved this" confirmation) before proceeding, not just toast it.
+- `vault_unlock(passphrase: string) -> void` — errors with a distinguishable `wrong_passphrase` variant.
+- `vault_recover(recoveryKey: string, newPassphrase: string) -> void` — unlocks using the recovery key instead of the passphrase, and sets `newPassphrase` as the passphrase going forward in the same step. Errors with `invalid_recovery_key` if it doesn't match; the original recovery key keeps working afterward.
+- `vault_reset() -> void` — wipes the vault and every saved profile. Last resort when both the passphrase and the recovery key are lost. The frontend must gate this behind strong, hard-to-misclick confirmation (e.g. typing a confirmation phrase), not a single click - there is no undo.
 - `vault_is_unlocked() -> bool`
-- `vault_lock() -> void` — clears the in-memory derived key. Added post-Phase-1-build: the frontend shipped a user-facing Lock button before this existed; added while wiring rather than shipping a button that only changed frontend-displayed state.
+- `vault_lock() -> void` — clears the in-memory derived key.
 
 ### Profiles (all error if `!vault_is_unlocked()`)
 - `profiles_list() -> Profile[]`

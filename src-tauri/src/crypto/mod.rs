@@ -42,6 +42,49 @@ pub fn validate_passphrase_len(passphrase: &str) -> AppResult<()> {
     Ok(())
 }
 
+/// Generates a random 256-bit data-encryption key (DEK) - the key that
+/// actually encrypts profile passwords. Both the passphrase and the
+/// recovery key wrap (encrypt) a copy of this same DEK rather than being
+/// used to encrypt data directly, so that either one can unlock the vault
+/// independently, and rotating the passphrase (via `vault_recover`) never
+/// requires re-encrypting every stored profile.
+pub fn generate_dek() -> VaultKey {
+    let mut key = [0u8; KEY_LEN];
+    rand::thread_rng().fill_bytes(&mut key);
+    key
+}
+
+const RECOVERY_KEY_BYTES: usize = 20; // 160 bits
+
+/// Generates a one-time recovery key: 160 random bits, base32-encoded
+/// (RFC 4648 - no 0/1/8/9 digits, so there's no risk of confusing a letter
+/// for a digit when hand-copying it) and grouped into dashed 4-character
+/// blocks for readability, e.g. `ABCD-EFGH-...`.
+pub fn generate_recovery_key() -> String {
+    let mut bytes = [0u8; RECOVERY_KEY_BYTES];
+    rand::thread_rng().fill_bytes(&mut bytes);
+    let encoded = data_encoding::BASE32_NOPAD.encode(&bytes);
+
+    encoded
+        .as_bytes()
+        .chunks(4)
+        .map(|chunk| std::str::from_utf8(chunk).unwrap_or_default())
+        .collect::<Vec<_>>()
+        .join("-")
+}
+
+/// Strips whitespace/dashes and uppercases a user-entered recovery key
+/// before using it as KDF input, so formatting differences from how it was
+/// originally displayed (spacing, case, stray dashes) don't cause a valid
+/// key to be rejected.
+pub fn normalize_recovery_key(input: &str) -> String {
+    input
+        .chars()
+        .filter(|c| !c.is_whitespace() && *c != '-')
+        .flat_map(char::to_uppercase)
+        .collect()
+}
+
 /// Generates a fresh cryptographically random salt suitable for Argon2id.
 pub fn random_salt() -> [u8; SALT_LEN] {
     let mut salt = [0u8; SALT_LEN];
@@ -150,5 +193,36 @@ mod tests {
     fn validate_passphrase_len_accepts_eight_or_more_chars() {
         assert!(validate_passphrase_len("exactly8").is_ok());
         assert!(validate_passphrase_len("way more than eight characters").is_ok());
+    }
+
+    #[test]
+    fn generate_dek_is_random() {
+        assert_ne!(generate_dek(), generate_dek());
+    }
+
+    #[test]
+    fn recovery_key_round_trips_through_normalize() {
+        let key = generate_recovery_key();
+        assert!(key.contains('-'));
+        // Simulate a user retyping it with stray spacing/lowercase.
+        let messy = format!(" {} ", key.to_lowercase());
+        assert_eq!(normalize_recovery_key(&key), normalize_recovery_key(&messy));
+    }
+
+    #[test]
+    fn dek_wrapped_by_recovery_key_unwraps_correctly() {
+        let dek = generate_dek();
+        let recovery_key = generate_recovery_key();
+        let salt = random_salt();
+
+        let derived = derive_key(&normalize_recovery_key(&recovery_key), &salt).unwrap();
+        let wrapped = encrypt(&derived, &dek).unwrap();
+
+        // Simulate the user retyping the key with different casing/spacing.
+        let retyped = normalize_recovery_key(&format!("  {}  ", recovery_key.to_lowercase()));
+        let re_derived = derive_key(&retyped, &salt).unwrap();
+        let unwrapped = decrypt(&re_derived, &wrapped).unwrap();
+
+        assert_eq!(unwrapped, dek);
     }
 }

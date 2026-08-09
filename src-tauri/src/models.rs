@@ -6,6 +6,15 @@
 
 use serde::{Deserialize, Deserializer, Serialize};
 
+/// Returned once by `vault_setup` - the recovery key is never stored in
+/// retrievable form (only wrapped-DEK ciphertext derived from it), so this
+/// is the only moment the app can ever show it to the user.
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct VaultSetupResult {
+    pub recovery_key: String,
+}
+
 /// A profile as seen by the frontend. Note the password is intentionally absent -
 /// per the contract, "password never leaves Rust in plaintext. Frontend never sees it."
 #[derive(Debug, Clone, Serialize)]
