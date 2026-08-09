@@ -48,11 +48,16 @@
  * and this app never toggles a .dark class, so there's no reason to carry
  * an unused light palette + a dead .dark variant side by side).
  *
- * background/border/muted-foreground/accent (rood) are the site's exact
- * values (#0b1822 "body", #334459 "pickled-bluewood", #9cabb9 "gull-gray",
- * #f2300d "rood"). card/secondary/accent surface tones are derived shades
- * between background and border - the site does the equivalent with
- * opacity variants of pickled-bluewood over its body color.
+ * background/border/muted-foreground are the site's exact values (#0b1822
+ * "body", #334459 "pickled-bluewood", #9cabb9 "gull-gray"). card/secondary/
+ * accent surface tones are derived shades between background and border -
+ * the site does the equivalent with opacity variants of pickled-bluewood
+ * over its body color.
+ *
+ * primary/ring is #eb9020, sampled directly from the actual logo image
+ * (src/assets/rose-logo.webp) rather than the site's own "rood" red-orange
+ * UI accent - closer to the logo's gold/amber gradient (#fddf55 -> #e66729)
+ * than the site's hover-state red.
  */
 :root {
   --radius: 0.625rem;
@@ -62,8 +67,8 @@
   --card-foreground: #e8edf2;
   --popover: #10202c;
   --popover-foreground: #e8edf2;
-  --primary: #f2300d;
-  --primary-foreground: #ffffff;
+  --primary: #eb9020;
+  --primary-foreground: #0b1822;
   --secondary: #16283a;
   --secondary-foreground: #e8edf2;
   --muted: #16283a;
@@ -73,7 +78,7 @@
   --destructive: oklch(0.577 0.245 27.325);
   --border: #334459;
   --input: #334459;
-  --ring: #f2300d;
+  --ring: #eb9020;
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
@@ -81,12 +86,12 @@
   --chart-5: oklch(0.769 0.188 70.08);
   --sidebar: #0b1822;
   --sidebar-foreground: #e8edf2;
-  --sidebar-primary: #f2300d;
-  --sidebar-primary-foreground: #ffffff;
+  --sidebar-primary: #eb9020;
+  --sidebar-primary-foreground: #0b1822;
   --sidebar-accent: #1d3244;
   --sidebar-accent-foreground: #e8edf2;
   --sidebar-border: #334459;
-  --sidebar-ring: #f2300d;
+  --sidebar-ring: #eb9020;
 }
 
 @layer base {

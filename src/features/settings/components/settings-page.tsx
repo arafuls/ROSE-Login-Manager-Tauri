@@ -229,22 +229,6 @@ export function SettingsPage() {
           </div>
         </CardContent>
       </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Client settings</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <SettingRow
-            checked={settings.toggleCharDataScanning}
-            description="Writes the active character's name to the ROSE client's window title. Can be toggled without restarting."
-            label="Write character name to window title"
-            onCheckedChange={(checked) =>
-              persist({ toggleCharDataScanning: checked })
-            }
-          />
-        </CardContent>
-      </Card>
     </div>
   );
 }

@@ -68,9 +68,6 @@ pub fn apply_patch(current: &Settings, patch: &SettingsPatch) -> Settings {
     if let Some(v) = patch.login_screen {
         next.login_screen = v;
     }
-    if let Some(v) = patch.toggle_char_data_scanning {
-        next.toggle_char_data_scanning = v;
-    }
 
     next
 }

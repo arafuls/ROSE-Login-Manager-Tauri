@@ -51,8 +51,11 @@ type Settings = {
   launchClientBehind: boolean;
   skipPlanetCutscene: boolean;
   loginScreen: "Random" | "Treehouse" | "Adventure Plains" | "Junon Polis";
-  toggleCharDataScanning: boolean;
 };
+// toggleCharDataScanning (writing the active character's name to the game
+// window title) was removed - it required the memory scanner, which was
+// never implemented, so the toggle did nothing. Revisit if/when the memory
+// scanner phase happens.
 
 type ExportBundle = {
   version: 1;

@@ -16,7 +16,6 @@ export interface Settings {
   maskEmail: boolean;
   roseGameFolder: string | null;
   skipPlanetCutscene: boolean;
-  toggleCharDataScanning: boolean;
 }
 
 export type SettingsPatch = Partial<Settings>;

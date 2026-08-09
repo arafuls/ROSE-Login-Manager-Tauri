@@ -77,7 +77,6 @@ pub struct Settings {
     pub launch_client_behind: bool,
     pub skip_planet_cutscene: bool,
     pub login_screen: LoginScreen,
-    pub toggle_char_data_scanning: bool,
 }
 
 impl Default for Settings {
@@ -89,7 +88,6 @@ impl Default for Settings {
             launch_client_behind: false,
             skip_planet_cutscene: false,
             login_screen: LoginScreen::Random,
-            toggle_char_data_scanning: false,
         }
     }
 }
@@ -124,8 +122,6 @@ pub struct SettingsPatch {
     pub skip_planet_cutscene: Option<bool>,
     #[serde(default)]
     pub login_screen: Option<LoginScreen>,
-    #[serde(default)]
-    pub toggle_char_data_scanning: Option<bool>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
