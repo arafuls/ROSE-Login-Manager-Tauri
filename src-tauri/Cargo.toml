@@ -35,6 +35,7 @@ winreg = "0.52"
 
 # Error ergonomics
 thiserror = "1"
+tauri-plugin-dialog = "2"
 
 [features]
 # This feature is used for production builds or when a dev server is not specified, DO NOT REMOVE!!

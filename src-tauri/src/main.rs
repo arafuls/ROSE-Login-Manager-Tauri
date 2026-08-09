@@ -19,6 +19,7 @@ fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_process::init())
+        .plugin(tauri_plugin_dialog::init())
         .setup(|app| {
             let app_data_dir = app
                 .path()
@@ -53,6 +54,7 @@ fn main() {
             commands::profiles::profiles_reorder,
             commands::profiles::profiles_export,
             commands::profiles::profiles_import,
+            commands::profiles::profiles_read_export_file,
             commands::process::profiles_launch,
             commands::settings::settings_get,
             commands::settings::settings_update,

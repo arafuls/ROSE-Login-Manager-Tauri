@@ -25,6 +25,16 @@ fn notify_changed(app: &AppHandle) {
     let _ = app.emit(PROFILES_CHANGED_EVENT, ());
 }
 
+/// Reads the contents of a file the user picked via the native open dialog
+/// (`@tauri-apps/plugin-dialog`'s `open()`) for import. A dedicated command
+/// rather than pulling in `tauri-plugin-fs` for this one read - that plugin's
+/// static path-scoping is unnecessary complexity when the only file we ever
+/// read is one the user just explicitly chose through a native dialog.
+#[tauri::command]
+pub fn profiles_read_export_file(path: String) -> AppResult<String> {
+    std::fs::read_to_string(&path).map_err(Into::into)
+}
+
 #[tauri::command]
 pub fn profiles_list(state: State<AppState>) -> AppResult<Vec<Profile>> {
     state.require_unlocked()?;

@@ -117,6 +117,10 @@ export async function profilesExport(
   }
 }
 
+export function profilesReadExportFile(path: string): Promise<string> {
+  return invoke("profiles_read_export_file", { path });
+}
+
 export async function profilesImport(
   bundle: ExportBundle,
   exportPassword: string
