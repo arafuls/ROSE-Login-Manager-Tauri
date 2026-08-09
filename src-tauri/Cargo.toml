@@ -17,6 +17,25 @@ serde_json = "1"
 tauri-plugin-shell = "2"
 tauri-plugin-process = "2.3.1"
 
+# Persistence
+rusqlite = { version = "0.31", features = ["bundled"] }
+
+# Crypto: Argon2id passphrase -> key derivation, AES-256-GCM authenticated encryption
+argon2 = "0.5"
+aes-gcm = "0.10"
+rand = "0.8"
+base64 = "0.22"
+
+# Settings / game config
+toml = "0.8"
+dirs = "5"
+
+# Windows registry lookup (game install folder, HKLM + HKCU)
+winreg = "0.52"
+
+# Error ergonomics
+thiserror = "1"
+
 [features]
 # This feature is used for production builds or when a dev server is not specified, DO NOT REMOVE!!
 custom-protocol = ["tauri/custom-protocol"]
