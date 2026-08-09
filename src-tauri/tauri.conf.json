@@ -1,0 +1,40 @@
+{
+  "build": {
+    "beforeDevCommand": "bun dev",
+    "beforeBuildCommand": "bun run build",
+    "frontendDist": "../dist",
+    "devUrl": "http://localhost:1420"
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ]
+  },
+  "productName": "ROSE Login Manager",
+  "version": "0.1.0",
+  "identifier": "com.arafuls.rose-login-manager",
+  "plugins": {
+    "process": {
+      "active": true
+    }
+  },
+  "app": {
+    "security": {
+      "csp": null
+    },
+    "windows": [
+      {
+        "title": "ROSE Login Manager",
+        "width": 1000,
+        "height": 600,
+        "dragDropEnabled": false
+      }
+    ]
+  }
+}
