@@ -17,7 +17,7 @@ import { Download, LoaderCircle, Plus, Upload, UserRound } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { profilesReorder } from "@/features/profiles/api";
+import { profilesLaunch, profilesReorder } from "@/features/profiles/api";
 import type { Profile } from "@/features/profiles/types";
 import { useProfiles } from "@/features/profiles/use-profiles";
 import { useSettings } from "@/features/settings/use-settings";
@@ -74,6 +74,16 @@ export function ProfileList() {
       await refetch();
     } finally {
       setOrderedEmails(null);
+    }
+  };
+
+  const handleLaunch = async (profile: Profile) => {
+    try {
+      await profilesLaunch(profile.email);
+    } catch (error) {
+      toast.error(`Couldn't launch ${profile.name}`, {
+        description: error instanceof Error ? error.message : undefined,
+      });
     }
   };
 
@@ -155,6 +165,7 @@ export function ProfileList() {
                   key={profile.email}
                   onDelete={() => setDeletingProfile(profile)}
                   onEdit={() => openEdit(profile)}
+                  onLaunch={() => handleLaunch(profile)}
                   profile={profile}
                   settings={settings}
                 />

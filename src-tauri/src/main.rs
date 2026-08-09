@@ -29,6 +29,8 @@ fn main() {
 
             let db_path = app_data_dir.join("data.sqlite");
             let conn = db::open(&db_path).expect("failed to open/initialize database");
+            db::profiles::clear_all_status(&conn)
+                .expect("failed to clear stale profile statuses");
 
             app.manage(AppState {
                 db: Mutex::new(conn),
@@ -51,6 +53,7 @@ fn main() {
             commands::profiles::profiles_reorder,
             commands::profiles::profiles_export,
             commands::profiles::profiles_import,
+            commands::process::profiles_launch,
             commands::settings::settings_get,
             commands::settings::settings_update,
             commands::settings::settings_find_game_folder,

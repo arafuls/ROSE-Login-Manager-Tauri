@@ -30,6 +30,15 @@ pub enum AppError {
     #[error("no profile found for this email")]
     ProfileNotFound,
 
+    #[error("no ROSE Online game folder is configured in settings")]
+    GameFolderNotSet,
+
+    #[error("trose.exe was not found in the configured game folder")]
+    GameExecutableNotFound,
+
+    #[error("this profile's client is already running")]
+    AlreadyRunning,
+
     #[error("export bundle is malformed or was encrypted with a different password")]
     InvalidExportBundle,
 
@@ -56,6 +65,9 @@ impl AppError {
             AppError::PassphraseTooShort { .. } => "passphrase_too_short",
             AppError::DuplicateEmail => "duplicate_email",
             AppError::ProfileNotFound => "profile_not_found",
+            AppError::GameFolderNotSet => "game_folder_not_set",
+            AppError::GameExecutableNotFound => "game_executable_not_found",
+            AppError::AlreadyRunning => "already_running",
             AppError::InvalidExportBundle => "invalid_export_bundle",
             AppError::Io(_) => "io_error",
             AppError::Db(_) => "db_error",

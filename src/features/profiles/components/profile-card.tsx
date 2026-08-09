@@ -1,6 +1,7 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical, Pencil, Trash2 } from "lucide-react";
+import { GripVertical, LoaderCircle, Pencil, Play, Trash2 } from "lucide-react";
+import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -13,6 +14,7 @@ import { cn } from "@/lib/utils";
 interface ProfileCardProps {
   onDelete: () => void;
   onEdit: () => void;
+  onLaunch: () => Promise<void>;
   onSelectedChange?: (selected: boolean) => void;
   profile: Profile;
   selectable?: boolean;
@@ -28,7 +30,18 @@ export function ProfileCard({
   onSelectedChange,
   onEdit,
   onDelete,
+  onLaunch,
 }: ProfileCardProps) {
+  const [launching, setLaunching] = useState(false);
+
+  const handleLaunch = async () => {
+    setLaunching(true);
+    try {
+      await onLaunch();
+    } finally {
+      setLaunching(false);
+    }
+  };
   const {
     attributes,
     listeners,
@@ -97,6 +110,20 @@ export function ProfileCard({
       </div>
 
       <div className="flex shrink-0 items-center gap-1">
+        <Button
+          aria-label="Launch client"
+          disabled={launching || profile.status}
+          onClick={handleLaunch}
+          size="icon-sm"
+          title={profile.status ? "Already running" : "Launch"}
+          variant="ghost"
+        >
+          {launching ? (
+            <LoaderCircle className="size-4 animate-spin" />
+          ) : (
+            <Play className="size-4" />
+          )}
+        </Button>
         <Button
           aria-label="Edit profile"
           onClick={onEdit}

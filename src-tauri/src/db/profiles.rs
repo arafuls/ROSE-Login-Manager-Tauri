@@ -152,6 +152,37 @@ pub fn reorder(conn: &Connection, ordered_emails: &[String]) -> AppResult<()> {
     Ok(())
 }
 
+/// Fetches the raw encrypted password blob for a single profile, for
+/// `profiles_launch` to decrypt just before spawning the game client.
+pub fn get_encrypted_password(conn: &Connection, email: &str) -> AppResult<Option<Vec<u8>>> {
+    conn.query_row(
+        "SELECT password FROM profiles WHERE email = ?1",
+        [email],
+        |row| row.get(0),
+    )
+    .optional()
+    .map_err(Into::into)
+}
+
+/// Sets whether a profile's client is currently running.
+pub fn set_status(conn: &Connection, email: &str, status: bool) -> AppResult<()> {
+    conn.execute(
+        "UPDATE profiles SET status = ?1 WHERE email = ?2",
+        rusqlite::params![status, email],
+    )?;
+    Ok(())
+}
+
+/// Resets every profile's status to "not running". Called once at startup:
+/// a `status = 1` row surviving from a previous session (e.g. the app was
+/// killed while a client was running) doesn't mean anything is actually
+/// running in *this* session, since nothing here is tracking it - matches
+/// the old app's `ProcessManager` constructor calling `ClearAllProfileStatus`.
+pub fn clear_all_status(conn: &Connection) -> AppResult<()> {
+    conn.execute("UPDATE profiles SET status = 0", [])?;
+    Ok(())
+}
+
 /// Fetches `(name, email, encrypted_password)` for the given emails, in the order
 /// they were requested, skipping any that don't exist. Used by `profiles_export`.
 pub fn get_many_with_password(

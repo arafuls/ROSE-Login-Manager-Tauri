@@ -7,6 +7,13 @@ If either side needs to deviate, update this file first, then implement — don'
 Scope: profile CRUD/reorder, profile import/export, the passphrase-based vault, and settings.
 Out of scope for Phase 1: process launching, memory scanning, the game updater, HWID. Those are later phases.
 
+**Update:** `profiles_launch` (Phase 2) has been added below, ahead of the rest of Phase 2 - it's just
+the launch-with-credentials piece, not the "launch behind" window positioning or character-name/window-title
+scanning (those still require `windows-rs` Win32 window-handle work and the memory scanner respectively,
+and remain deferred). Accepted limitation carried over from the old app: `trose.exe` only accepts login
+credentials as CLI arguments, visible to any other process on the machine for the life of the client. This
+is a game-client limitation, not something the launcher can close; the game developers have been informed.
+
 ## Design decision carried over from the old app's review
 
 The old WPF app derived its AES key from hardware IDs (CPU/motherboard/disk serials via WMI). That key
@@ -70,6 +77,7 @@ type ExportBundle = {
 - `profiles_reorder(orderedEmails: string[]) -> void`
 - `profiles_export(emails: string[], exportPassword: string) -> ExportBundle`
 - `profiles_import(bundle: ExportBundle, exportPassword: string) -> { imported: number; skipped: string[] }` — skips (doesn't overwrite) profiles whose email already exists; returns which were skipped so the UI can tell the user.
+- `profiles_launch(email: string) -> void` — decrypts the profile's password and spawns `trose.exe` with it. Errors: `game_folder_not_set`, `game_executable_not_found`, `already_running` (in addition to the usual `vault_locked`/`profile_not_found`). Flips the profile's `status` to running immediately, and back to not-running automatically once the client process exits (emits `profiles-changed` both times).
 
 ### Settings
 - `settings_get() -> Settings`

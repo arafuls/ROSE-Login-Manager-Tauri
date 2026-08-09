@@ -34,6 +34,9 @@ export type ProfileErrorKind =
   | "duplicate_email"
   | "not_found"
   | "vault_locked"
+  | "game_folder_not_set"
+  | "game_executable_not_found"
+  | "already_running"
   | "unknown";
 
 /**
@@ -59,6 +62,12 @@ function defaultMessageFor(kind: ProfileErrorKind): string {
       return "That profile no longer exists.";
     case "vault_locked":
       return "The vault is locked.";
+    case "game_folder_not_set":
+      return "Set your ROSE Online folder in Settings first.";
+    case "game_executable_not_found":
+      return "trose.exe wasn't found in the configured game folder.";
+    case "already_running":
+      return "This profile's client is already running.";
     default:
       return "Something went wrong.";
   }

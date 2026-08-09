@@ -19,6 +19,9 @@ const KIND_MAP: Record<string, ProfileErrorKind> = {
   duplicate_email: "duplicate_email",
   profile_not_found: "not_found",
   vault_locked: "vault_locked",
+  game_folder_not_set: "game_folder_not_set",
+  game_executable_not_found: "game_executable_not_found",
+  already_running: "already_running",
 };
 
 /** See the equivalent note in features/vault/api.ts - same reasoning. */
@@ -90,6 +93,14 @@ export async function profilesDelete(email: string): Promise<void> {
 export async function profilesReorder(orderedEmails: string[]): Promise<void> {
   try {
     await invoke("profiles_reorder", { orderedEmails });
+  } catch (error) {
+    throw toProfileError(error);
+  }
+}
+
+export async function profilesLaunch(email: string): Promise<void> {
+  try {
+    await invoke("profiles_launch", { email });
   } catch (error) {
     throw toProfileError(error);
   }
