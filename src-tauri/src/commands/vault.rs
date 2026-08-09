@@ -63,3 +63,13 @@ pub fn vault_unlock(passphrase: String, state: State<AppState>) -> AppResult<()>
 pub fn vault_is_unlocked(state: State<AppState>) -> bool {
     state.vault_key.lock().unwrap().is_some()
 }
+
+/// Not in the original contract - added while wiring the frontend to real
+/// commands, because the frontend already has a user-facing "Lock" button
+/// (`root.tsx`) with nothing real to call. Without this, "locking" would
+/// only change what the frontend displays while the derived key stayed
+/// resident in `AppState`, which is worse than no lock button at all.
+#[tauri::command]
+pub fn vault_lock(state: State<AppState>) {
+    *state.vault_key.lock().unwrap() = None;
+}

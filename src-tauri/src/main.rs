@@ -43,6 +43,7 @@ fn main() {
             commands::vault::vault_setup,
             commands::vault::vault_unlock,
             commands::vault::vault_is_unlocked,
+            commands::vault::vault_lock,
             commands::profiles::profiles_list,
             commands::profiles::profiles_create,
             commands::profiles::profiles_update,

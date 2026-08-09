@@ -7,9 +7,9 @@ import {
   useState,
 } from "react";
 import {
-  devOnlyRelock,
   vaultIsInitialized,
   vaultIsUnlocked,
+  vaultLock,
   vaultSetup,
   vaultUnlock,
 } from "./api";
@@ -17,7 +17,7 @@ import {
 type VaultStatus = "checking" | "needs-setup" | "locked" | "unlocked";
 
 interface VaultContextValue {
-  lock: () => void;
+  lock: () => Promise<void>;
   setup: (passphrase: string) => Promise<void>;
   status: VaultStatus;
   unlock: (passphrase: string) => Promise<void>;
@@ -57,8 +57,8 @@ export function VaultProvider({ children }: { children: ReactNode }) {
     setStatus("unlocked");
   }, []);
 
-  const lock = useCallback(() => {
-    devOnlyRelock();
+  const lock = useCallback(async () => {
+    await vaultLock();
     setStatus("locked");
   }, []);
 

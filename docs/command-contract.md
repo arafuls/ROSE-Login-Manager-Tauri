@@ -60,6 +60,7 @@ type ExportBundle = {
 - `vault_setup(passphrase: string) -> void` — first-run only; errors if already initialized.
 - `vault_unlock(passphrase: string) -> void` — errors with a distinguishable "wrong passphrase" variant.
 - `vault_is_unlocked() -> bool`
+- `vault_lock() -> void` — clears the in-memory derived key. Added post-Phase-1-build: the frontend shipped a user-facing Lock button before this existed; added while wiring rather than shipping a button that only changed frontend-displayed state.
 
 ### Profiles (all error if `!vault_is_unlocked()`)
 - `profiles_list() -> Profile[]`

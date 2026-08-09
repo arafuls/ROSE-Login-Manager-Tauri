@@ -16,12 +16,7 @@ function AppShell() {
           <NavTab icon={Users} label="Profiles" to="/" />
           <NavTab icon={SettingsIcon} label="Settings" to="/settings" />
         </nav>
-        <Button
-          onClick={lock}
-          size="sm"
-          title="Lock the vault (dev convenience - not a backend command yet)"
-          variant="ghost"
-        >
+        <Button onClick={lock} size="sm" title="Lock the vault" variant="ghost">
           <LogOut className="size-4" />
           Lock
         </Button>
