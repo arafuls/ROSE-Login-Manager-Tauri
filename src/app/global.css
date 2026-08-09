@@ -123,4 +123,17 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  /*
+   * Tauri's Windows webview is WebView2 (Chromium + legacy Edge
+   * compatibility), which still draws its own native reveal/clear icon on
+   * password inputs via ::-ms-reveal/::-ms-clear. Without this, it stacks
+   * on top of any custom show/hide password button (e.g. profile-form-dialog),
+   * showing two eye icons. A plain browser doesn't render these, which is
+   * why this didn't show up in earlier browser-preview testing.
+   */
+  input::-ms-reveal,
+  input::-ms-clear {
+    display: none;
+  }
 }

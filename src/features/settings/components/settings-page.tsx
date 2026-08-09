@@ -1,5 +1,5 @@
 import { FolderSearch, LoaderCircle, Wand2 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -34,6 +34,16 @@ export function SettingsPage() {
   const { settings, loading } = useSettings();
   const [locating, setLocating] = useState(false);
   const [browsing, setBrowsing] = useState(false);
+  // The game folder Input is controlled from this, not directly from
+  // `settings.roseGameFolder` - a plain `defaultValue` only applies once on
+  // mount, so a value set by Find automatically/Browse (which update
+  // `settings` after the fact) would never visibly appear in the field even
+  // though it was actually saved. Synced below whenever `settings` changes.
+  const [folderInput, setFolderInput] = useState("");
+
+  useEffect(() => {
+    setFolderInput(settings?.roseGameFolder ?? "");
+  }, [settings?.roseGameFolder]);
 
   if (loading || !settings) {
     return (
@@ -102,9 +112,10 @@ export function SettingsPage() {
         </CardHeader>
         <CardContent className="flex gap-2">
           <Input
-            defaultValue={settings.roseGameFolder ?? ""}
             onBlur={(e) => persist({ roseGameFolder: e.target.value || null })}
+            onChange={(e) => setFolderInput(e.target.value)}
             placeholder="C:\Program Files (x86)\Rednim Games\ROSE Online"
+            value={folderInput}
           />
           <Button
             disabled={browsing}
