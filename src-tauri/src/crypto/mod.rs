@@ -21,7 +21,26 @@ pub const KEY_LEN: usize = 32;
 pub const SALT_LEN: usize = 16;
 pub const NONCE_LEN: usize = 12;
 
+/// Minimum passphrase length enforced at the command boundary. The frontend
+/// already enforces this via zod (vault setup and export password both use
+/// an 8-character minimum) - this is defense-in-depth so a weak passphrase
+/// can't reach `derive_key` just because some future or different caller
+/// skips client-side validation.
+pub const MIN_PASSPHRASE_LEN: usize = 8;
+
 pub type VaultKey = [u8; KEY_LEN];
+
+/// Rejects passphrases/export passwords shorter than [`MIN_PASSPHRASE_LEN`].
+/// Counts Unicode scalar values, not bytes, so multi-byte characters aren't
+/// penalized.
+pub fn validate_passphrase_len(passphrase: &str) -> AppResult<()> {
+    if passphrase.chars().count() < MIN_PASSPHRASE_LEN {
+        return Err(AppError::PassphraseTooShort {
+            min: MIN_PASSPHRASE_LEN,
+        });
+    }
+    Ok(())
+}
 
 /// Generates a fresh cryptographically random salt suitable for Argon2id.
 pub fn random_salt() -> [u8; SALT_LEN] {
@@ -119,5 +138,17 @@ mod tests {
         let key_a = derive_key("passphrase", &random_salt()).unwrap();
         let key_b = derive_key("passphrase", &random_salt()).unwrap();
         assert_ne!(key_a, key_b);
+    }
+
+    #[test]
+    fn validate_passphrase_len_rejects_short_passphrases() {
+        let err = validate_passphrase_len("short").unwrap_err();
+        assert!(matches!(err, AppError::PassphraseTooShort { min: 8 }));
+    }
+
+    #[test]
+    fn validate_passphrase_len_accepts_eight_or_more_chars() {
+        assert!(validate_passphrase_len("exactly8").is_ok());
+        assert!(validate_passphrase_len("way more than eight characters").is_ok());
     }
 }

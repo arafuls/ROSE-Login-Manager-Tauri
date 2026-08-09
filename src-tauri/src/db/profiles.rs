@@ -102,7 +102,10 @@ pub fn update(
     let existing = get(conn, email)?.ok_or(AppError::ProfileNotFound)?;
 
     if let Some(candidate) = new_email {
-        if candidate != email && email_exists(conn, candidate)? {
+        // Case-insensitive comparison, matching the column's COLLATE NOCASE:
+        // renaming "test@x.com" -> "Test@x.com" is the same profile, not a
+        // collision with itself.
+        if !candidate.eq_ignore_ascii_case(email) && email_exists(conn, candidate)? {
             return Err(AppError::DuplicateEmail);
         }
     }
@@ -204,6 +207,41 @@ mod tests {
         insert(&conn, "B", "b@example.com", b"ct").unwrap();
 
         let err = update(&conn, "b@example.com", None, Some("a@example.com"), None).unwrap_err();
+        assert!(matches!(err, AppError::DuplicateEmail));
+    }
+
+    #[test]
+    fn insert_rejects_duplicate_email_case_insensitively() {
+        let conn = open_in_memory().unwrap();
+        insert(&conn, "Main", "dup@example.com", b"ct").unwrap();
+        let err = insert(&conn, "Alt", "DUP@Example.com", b"ct2").unwrap_err();
+        assert!(matches!(err, AppError::DuplicateEmail));
+    }
+
+    #[test]
+    fn update_allows_renaming_to_a_different_case_of_the_same_email() {
+        let conn = open_in_memory().unwrap();
+        insert(&conn, "Main", "test@example.com", b"ct").unwrap();
+
+        let updated = update(
+            &conn,
+            "test@example.com",
+            None,
+            Some("Test@Example.com"),
+            None,
+        )
+        .unwrap();
+        assert_eq!(updated.email, "Test@Example.com");
+        assert_eq!(list(&conn).unwrap().len(), 1);
+    }
+
+    #[test]
+    fn update_rejects_collision_with_other_profile_case_insensitively() {
+        let conn = open_in_memory().unwrap();
+        insert(&conn, "A", "a@example.com", b"ct").unwrap();
+        insert(&conn, "B", "b@example.com", b"ct").unwrap();
+
+        let err = update(&conn, "b@example.com", None, Some("A@Example.com"), None).unwrap_err();
         assert!(matches!(err, AppError::DuplicateEmail));
     }
 

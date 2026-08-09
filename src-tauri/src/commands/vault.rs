@@ -32,6 +32,7 @@ pub fn vault_setup(passphrase: String, state: State<AppState>) -> AppResult<()> 
     if vault_meta::is_initialized(&conn)? {
         return Err(AppError::VaultAlreadyInitialized);
     }
+    crypto::validate_passphrase_len(&passphrase)?;
 
     let salt = crypto::random_salt();
     let key = crypto::derive_key(&passphrase, &salt)?;

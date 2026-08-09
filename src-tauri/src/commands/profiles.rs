@@ -113,6 +113,7 @@ pub fn profiles_export(
     state: State<AppState>,
 ) -> AppResult<ExportBundle> {
     let vault_key = state.require_unlocked()?;
+    crypto::validate_passphrase_len(&export_password)?;
 
     let rows = {
         let conn = state.db.lock().unwrap();

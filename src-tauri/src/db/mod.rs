@@ -10,6 +10,12 @@
 //!
 //! A second table, `vault_meta`, holds the single row of Argon2id salt + verifier
 //! blob used to unlock the vault (see `crate::crypto::vault`).
+//!
+//! `email` is declared `COLLATE NOCASE` so uniqueness (and every lookup) is
+//! case-insensitive - `Test@example.com` and `test@example.com` are the same
+//! profile. This also matches the frontend's mock duplicate-email check
+//! (`profiles/api.ts`, `.toLowerCase()` comparison); without this the two
+//! sides would disagree once the mock is swapped for real commands.
 
 pub mod profiles;
 pub mod vault_meta;
@@ -32,7 +38,7 @@ fn migrate(conn: &Connection) -> AppResult<()> {
     conn.execute_batch(
         r#"
         CREATE TABLE IF NOT EXISTS profiles (
-            email           TEXT    PRIMARY KEY,
+            email           TEXT    PRIMARY KEY COLLATE NOCASE,
             name            TEXT    NOT NULL,
             status          INTEGER NOT NULL DEFAULT 0,
             password        BLOB    NOT NULL,

@@ -21,6 +21,9 @@ pub enum AppError {
     #[error("wrong passphrase")]
     WrongPassphrase,
 
+    #[error("passphrase must be at least {min} characters")]
+    PassphraseTooShort { min: usize },
+
     #[error("a profile with this email already exists")]
     DuplicateEmail,
 
@@ -50,6 +53,7 @@ impl AppError {
             AppError::VaultAlreadyInitialized => "vault_already_initialized",
             AppError::VaultNotInitialized => "vault_not_initialized",
             AppError::WrongPassphrase => "wrong_passphrase",
+            AppError::PassphraseTooShort { .. } => "passphrase_too_short",
             AppError::DuplicateEmail => "duplicate_email",
             AppError::ProfileNotFound => "profile_not_found",
             AppError::InvalidExportBundle => "invalid_export_bundle",
