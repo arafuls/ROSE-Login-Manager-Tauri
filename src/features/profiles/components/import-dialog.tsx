@@ -118,6 +118,9 @@ export function ImportDialog({
       if (picked) {
         setFile(picked);
         setFileError(null);
+        // Move straight to the next thing the user needs to type, rather
+        // than making them click into the password field themselves.
+        form.setFocus("exportPassword");
       }
     } catch (error) {
       setFileError(

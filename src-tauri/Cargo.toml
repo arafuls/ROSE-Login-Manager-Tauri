@@ -37,6 +37,7 @@ winreg = "0.52"
 thiserror = "1"
 tauri-plugin-dialog = "2"
 data-encoding = "2"
+windows = { version = "=0.61.3", features = ["Win32_UI_WindowsAndMessaging", "Win32_Foundation"] }
 
 [features]
 # This feature is used for production builds or when a dev server is not specified, DO NOT REMOVE!!

@@ -19,6 +19,7 @@ use crate::db::profiles;
 use crate::error::{AppError, AppResult};
 use crate::settings;
 use crate::state::AppState;
+use crate::win32_window;
 
 const PROFILES_CHANGED_EVENT: &str = "profiles-changed";
 const LOGIN_SERVER: &str = "connect.roseonlinegame.com";
@@ -57,7 +58,7 @@ pub async fn profiles_launch(
     // (unlike `Shell::sidecar`, this doesn't require pre-registering
     // trose.exe anywhere) - the game folder is user-configured in Settings,
     // not bundled with this app.
-    let (mut rx, _child) = app
+    let (mut rx, child) = app
         .shell()
         .command(exe_path.to_string_lossy().to_string())
         .current_dir(&game_folder)
@@ -78,6 +79,17 @@ pub async fn profiles_launch(
         profiles::set_status(&conn, &email, true)?;
     }
     let _ = app.emit(PROFILES_CHANGED_EVENT, ());
+
+    if current_settings.launch_client_behind {
+        // Runs on a blocking thread (it polls with std::thread::sleep for up
+        // to ~5s waiting for the client's window to appear) so it doesn't
+        // delay this command's response to the frontend.
+        let behind_app = app.clone();
+        let child_pid = child.pid();
+        tauri::async_runtime::spawn_blocking(move || {
+            win32_window::move_behind_main_window(&behind_app, child_pid);
+        });
+    }
 
     // Watch for the client exiting on a background task so the profile's
     // "running" status clears itself without the user having to do anything -

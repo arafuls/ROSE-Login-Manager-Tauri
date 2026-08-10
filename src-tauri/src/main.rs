@@ -8,6 +8,7 @@ mod error;
 mod models;
 mod settings;
 mod state;
+mod win32_window;
 
 use std::sync::Mutex;
 
