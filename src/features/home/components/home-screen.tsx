@@ -113,7 +113,7 @@ export function HomeScreen() {
 
       <div className="space-y-2">
         <LaunchStatusBar />
-        <div className="flex items-center gap-2">
+        <div className="flex items-center justify-end gap-2">
           <Button
             disabled={verifying}
             onClick={handleForceRecheck}
@@ -126,7 +126,7 @@ export function HomeScreen() {
             )}
             Verify Files
           </Button>
-          <Button className="ml-auto" disabled={playing} onClick={handlePlay}>
+          <Button className="w-48" disabled={playing} onClick={handlePlay}>
             {playing ? (
               <LoaderCircle className="size-4 animate-spin" />
             ) : (
