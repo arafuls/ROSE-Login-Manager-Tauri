@@ -28,7 +28,7 @@ base64 = "0.22"
 
 # Settings / game config
 toml = "0.8"
-dirs = "5"
+dirs = "6"
 
 # Windows registry lookup (game install folder, HKLM + HKCU)
 winreg = "0.52"
