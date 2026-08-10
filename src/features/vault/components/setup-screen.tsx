@@ -54,7 +54,7 @@ export function SetupScreen() {
     <div className="flex h-screen items-center justify-center p-4">
       <Card className="w-full max-w-sm">
         <CardHeader className="items-center text-center">
-          <div className="mb-2 flex size-12 items-center justify-center rounded-full bg-muted">
+          <div className="mx-auto mb-2 flex size-12 items-center justify-center rounded-full bg-muted">
             <ShieldCheck className="size-6" />
           </div>
           <CardTitle>Set up your vault</CardTitle>

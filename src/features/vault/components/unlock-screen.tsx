@@ -91,7 +91,7 @@ function UnlockForm({
   return (
     <>
       <CardHeader className="items-center text-center">
-        <div className="mb-2 flex size-12 items-center justify-center rounded-full bg-muted">
+        <div className="mx-auto mb-2 flex size-12 items-center justify-center rounded-full bg-muted">
           <KeyRound className="size-6" />
         </div>
         <CardTitle>Unlock your vault</CardTitle>
@@ -179,7 +179,7 @@ function RecoverForm({
   return (
     <>
       <CardHeader className="items-center text-center">
-        <div className="mb-2 flex size-12 items-center justify-center rounded-full bg-muted">
+        <div className="mx-auto mb-2 flex size-12 items-center justify-center rounded-full bg-muted">
           <KeyRound className="size-6" />
         </div>
         <CardTitle>Recover your vault</CardTitle>

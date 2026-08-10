@@ -36,7 +36,7 @@ export function RecoveryKeyScreen() {
     <div className="flex h-screen items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="items-center text-center">
-          <div className="mb-2 flex size-12 items-center justify-center rounded-full bg-muted">
+          <div className="mx-auto mb-2 flex size-12 items-center justify-center rounded-full bg-muted">
             <ShieldAlert className="size-6" />
           </div>
           <CardTitle>Save your recovery key</CardTitle>
