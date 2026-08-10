@@ -1,24 +1,15 @@
+import { DndContext } from "@dnd-kit/core";
 import {
-  closestCenter,
-  DndContext,
-  type DragEndEvent,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-} from "@dnd-kit/core";
-import {
-  arrayMove,
   SortableContext,
-  sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { Download, LoaderCircle, Plus, Upload, UserRound } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { profilesLaunch, profilesReorder } from "@/features/profiles/api";
+import { profilesLaunch } from "@/features/profiles/api";
 import type { Profile } from "@/features/profiles/types";
+import { useProfileReorder } from "@/features/profiles/use-profile-reorder";
 import { useProfiles } from "@/features/profiles/use-profiles";
 import { useSettings } from "@/features/settings/use-settings";
 import { DeleteProfileDialog } from "./delete-profile-dialog";
@@ -30,52 +21,14 @@ import { ProfileFormDialog } from "./profile-form-dialog";
 export function ProfileList() {
   const { profiles, loading, refetch } = useProfiles();
   const { settings } = useSettings();
-  const [orderedEmails, setOrderedEmails] = useState<string[] | null>(null);
+  const { displayedProfiles, sensors, collisionDetection, handleDragEnd } =
+    useProfileReorder(profiles, refetch);
 
   const [formOpen, setFormOpen] = useState(false);
   const [editingProfile, setEditingProfile] = useState<Profile | undefined>();
   const [deletingProfile, setDeletingProfile] = useState<Profile | null>(null);
   const [exportOpen, setExportOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
-
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
-  );
-
-  // While a reorder is in flight we show the optimistic local order instead
-  // of whatever `useProfiles` last fetched, so the list doesn't jump back
-  // and forth before the mock "server" round-trip resolves.
-  const displayedProfiles = orderedEmails
-    ? orderedEmails
-        .map((email) => profiles.find((p) => p.email === email))
-        .filter((p): p is Profile => p !== undefined)
-    : profiles;
-
-  const handleDragEnd = async (event: DragEndEvent) => {
-    const { active, over } = event;
-    if (!over || active.id === over.id) {
-      return;
-    }
-    const currentOrder = displayedProfiles.map((p) => p.email);
-    const oldIndex = currentOrder.indexOf(String(active.id));
-    const newIndex = currentOrder.indexOf(String(over.id));
-    if (oldIndex === -1 || newIndex === -1) {
-      return;
-    }
-    const next = arrayMove(currentOrder, oldIndex, newIndex);
-    setOrderedEmails(next);
-    try {
-      await profilesReorder(next);
-    } catch (error) {
-      toast.error("Couldn't save the new order", {
-        description: error instanceof Error ? error.message : undefined,
-      });
-      await refetch();
-    } finally {
-      setOrderedEmails(null);
-    }
-  };
 
   const handleLaunch = async (profile: Profile) => {
     try {
@@ -151,7 +104,7 @@ export function ProfileList() {
 
       {!loading && profiles.length > 0 && settings && (
         <DndContext
-          collisionDetection={closestCenter}
+          collisionDetection={collisionDetection}
           onDragEnd={handleDragEnd}
           sensors={sensors}
         >

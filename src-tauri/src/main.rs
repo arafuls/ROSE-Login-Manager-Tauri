@@ -8,6 +8,7 @@ mod error;
 mod models;
 mod settings;
 mod state;
+mod updater;
 mod win32_window;
 
 use std::sync::Mutex;
@@ -59,6 +60,8 @@ fn main() {
             commands::profiles::profiles_import,
             commands::profiles::profiles_read_export_file,
             commands::process::profiles_launch,
+            commands::process::client_launch_default,
+            commands::process::updater_force_recheck,
             commands::settings::settings_get,
             commands::settings::settings_update,
             commands::settings::settings_find_game_folder,

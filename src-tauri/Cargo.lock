@@ -3120,6 +3120,7 @@ dependencies = [
  "tauri-plugin-process",
  "tauri-plugin-shell",
  "thiserror 1.0.69",
+ "tokio",
  "toml 0.8.2",
  "windows",
  "winreg 0.52.0",

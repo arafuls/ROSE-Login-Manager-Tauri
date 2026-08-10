@@ -39,6 +39,9 @@ pub enum AppError {
     #[error("trose.exe was not found in the configured game folder")]
     GameExecutableNotFound,
 
+    #[error("rose-updater.exe was not found in the configured game folder")]
+    UpdaterNotFound,
+
     #[error("this profile's client is already running")]
     AlreadyRunning,
 
@@ -71,6 +74,7 @@ impl AppError {
             AppError::ProfileNotFound => "profile_not_found",
             AppError::GameFolderNotSet => "game_folder_not_set",
             AppError::GameExecutableNotFound => "game_executable_not_found",
+            AppError::UpdaterNotFound => "updater_not_found",
             AppError::AlreadyRunning => "already_running",
             AppError::InvalidExportBundle => "invalid_export_bundle",
             AppError::Io(_) => "io_error",

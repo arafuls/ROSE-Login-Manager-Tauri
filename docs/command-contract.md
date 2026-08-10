@@ -91,6 +91,14 @@ type ExportBundle = {
 - `profiles_import(bundle: ExportBundle, exportPassword: string) -> { imported: number; skipped: string[] }` — skips (doesn't overwrite) profiles whose email already exists; returns which were skipped so the UI can tell the user.
 - `profiles_launch(email: string) -> void` — decrypts the profile's password and spawns `trose.exe` with it. Errors: `game_folder_not_set`, `game_executable_not_found`, `already_running` (in addition to the usual `vault_locked`/`profile_not_found`). Flips the profile's `status` to running immediately, and back to not-running automatically once the client process exits (emits `profiles-changed` both times).
 
+### Updater (see `src-tauri/src/updater.rs` for the CLI-grammar caveat - unverified against a real rose-updater.exe)
+- `client_launch_default() -> void` — launches the client with no saved profile (game shows its own login screen). No vault interaction. Same `game_folder_not_set`/`game_executable_not_found` errors as `profiles_launch`.
+- `updater_force_recheck() -> void` — runs rose-updater to check/update game files without launching anything ("Verify File Integrity"). Errors with `updater_not_found` if `rose-updater.exe` isn't in the game folder - no fallback for a verify-only action without it.
+- Both `profiles_launch` and `client_launch_default` route through `rose-updater.exe` first when it's present in the game folder (checking/updating before launch); when it's absent, they fall back to spawning `trose.exe` directly exactly as before this existed.
+
+### Events
+- `client-launch-status` — `{ running: boolean; context: "profile" | "default" | "verify" }`. Emitted when any of the three commands above spawns its process (`running: true`) and again when that process exits (`running: false`). Drives the Home screen's status bar - it reflects "a process is alive," not real update-download progress, since rose-updater's own progress-reporting format isn't verified yet.
+
 ### Settings
 - `settings_get() -> Settings`
 - `settings_update(patch: Partial<Settings>) -> Settings`

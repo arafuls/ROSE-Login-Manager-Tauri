@@ -1,4 +1,4 @@
-import { LogOut, Settings as SettingsIcon, Users } from "lucide-react";
+import { House, LogOut, Settings as SettingsIcon, Users } from "lucide-react";
 import type { ComponentType } from "react";
 import { NavLink, Outlet } from "react-router";
 import roseLogo from "@/assets/rose-logo.webp";
@@ -22,7 +22,8 @@ function AppShell() {
             width={331}
           />
           <nav className="flex items-center gap-1">
-            <NavTab icon={Users} label="Profiles" to="/" />
+            <NavTab icon={House} label="Home" to="/" />
+            <NavTab icon={Users} label="Profiles" to="/profiles" />
             <NavTab icon={SettingsIcon} label="Settings" to="/settings" />
           </nav>
         </div>
@@ -31,7 +32,7 @@ function AppShell() {
           Lock
         </Button>
       </header>
-      <main className="flex-1 overflow-y-auto">
+      <main className="min-h-0 flex-1 overflow-y-auto">
         <Outlet />
       </main>
     </div>
