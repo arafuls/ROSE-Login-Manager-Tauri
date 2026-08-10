@@ -252,24 +252,47 @@ async fn get_remote_files(
     Ok(files_repaired)
 }
 
-async fn fetch_remote_manifest(url: &str, manifest_name: &str) -> anyhow::Result<(Url, RemoteManifest)> {
+/// Parses the update URL - pure/no network, split out from
+/// `download_remote_manifest` so callers can compute `local_manifest_path`
+/// (needed for the recheck throttle below) before deciding whether a
+/// network round-trip is even warranted.
+fn parse_remote_url(url: &str) -> anyhow::Result<Url> {
     let mut url_str = url.to_owned();
     if !url_str.ends_with('/') {
         url_str.push('/');
     }
-    let remote_url =
-        Url::parse(&url_str).context(format!("{} ({})", ErrorCode::InvalidServerAddress, url))?;
+    Url::parse(&url_str).context(format!("{} ({})", ErrorCode::InvalidServerAddress, url))
+}
 
-    let remote_manifest = download_remote_manifest(&remote_url, manifest_name)
-        .await
-        .context(ErrorCode::CheckForUpdates.to_string())?;
+/// How long a launch trusts the local manifest cache without re-checking the
+/// remote server at all. Not the same as the local-manifest-hash-comparison
+/// `sync_game_files` already does when `force_recheck` is false - this skips
+/// even *asking* the server, so launching doesn't depend on the update
+/// server being reachable/fast for every single click when nothing has
+/// realistically changed since a few minutes ago. `updater_force_recheck`
+/// ("Verify Files") always bypasses this - it's a deliberate manual check.
+const RECHECK_THROTTLE: std::time::Duration = std::time::Duration::from_secs(15 * 60);
 
-    Ok((remote_url, remote_manifest))
+async fn is_recently_synced(local_manifest_path: &Path) -> bool {
+    let Ok(metadata) = tokio::fs::metadata(local_manifest_path).await else {
+        return false;
+    };
+    let Ok(modified) = metadata.modified() else {
+        return false;
+    };
+    // An `Err` here means `modified` is in the future (clock skew/manual
+    // tampering) - treat that as "unknown, recheck" rather than trusting it.
+    std::time::SystemTime::now()
+        .duration_since(modified)
+        .is_ok_and(|elapsed| elapsed < RECHECK_THROTTLE)
 }
 
 /// Checks the local manifest cache against the remote manifest and downloads
 /// only what changed (or, with `force_recheck`, re-checks every file's hash
-/// regardless of the cache). Cheap no-op when everything already matches.
+/// regardless of the cache). Cheap no-op when everything already matches,
+/// and skips even contacting the server if the last check was within
+/// `RECHECK_THROTTLE` (see its doc comment) - unless `force_recheck` is set,
+/// which always does a full check regardless of how recently one ran.
 /// Returns the number of files that had chunks downloaded.
 pub async fn sync_game_files(
     output_dir: &Path,
@@ -283,8 +306,18 @@ pub async fn sync_game_files(
         .await
         .context(ErrorCode::CreateGameFolder.to_string())?;
 
-    let (remote_url, remote_manifest) = fetch_remote_manifest(url, manifest_name).await?;
+    let remote_url = parse_remote_url(url)?;
     let local_manifest_path = local_manifest_path(output_dir, &remote_url);
+
+    if !force_recheck && is_recently_synced(&local_manifest_path).await {
+        info!("Skipping update check - synced within the last 15 minutes");
+        progress_state.set_stage(ProgressStage::Done);
+        return Ok(0);
+    }
+
+    let remote_manifest = download_remote_manifest(&remote_url, manifest_name)
+        .await
+        .context(ErrorCode::CheckForUpdates.to_string())?;
     let local_manifest = get_or_create_local_manifest(&local_manifest_path)
         .await
         .context(ErrorCode::ReadLocalData.to_string())?;
@@ -324,7 +357,10 @@ pub async fn verify_game_files(
 ) -> anyhow::Result<usize> {
     progress_state.set_stage(ProgressStage::FetchingMetadata);
 
-    let (remote_url, remote_manifest) = fetch_remote_manifest(url, manifest_name).await?;
+    let remote_url = parse_remote_url(url)?;
+    let remote_manifest = download_remote_manifest(&remote_url, manifest_name)
+        .await
+        .context(ErrorCode::CheckForUpdates.to_string())?;
     let all_files = build_full_file_list(&remote_manifest);
 
     let files_repaired = get_remote_files(
@@ -343,4 +379,46 @@ pub async fn verify_game_files(
 
     progress_state.set_stage(ProgressStage::Done);
     Ok(files_repaired)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn temp_manifest_path(name: &str) -> PathBuf {
+        std::env::temp_dir().join(format!("rose-update-throttle-test-{}-{name}", std::process::id()))
+    }
+
+    #[tokio::test]
+    async fn missing_manifest_is_not_recently_synced() {
+        let path = temp_manifest_path("missing");
+        let _ = std::fs::remove_file(&path);
+
+        assert!(!is_recently_synced(&path).await);
+    }
+
+    #[tokio::test]
+    async fn freshly_written_manifest_is_recently_synced() {
+        let path = temp_manifest_path("fresh");
+        std::fs::write(&path, b"{}").unwrap();
+
+        assert!(is_recently_synced(&path).await);
+
+        let _ = std::fs::remove_file(&path);
+    }
+
+    #[tokio::test]
+    async fn manifest_older_than_throttle_is_not_recently_synced() {
+        let path = temp_manifest_path("stale");
+        std::fs::write(&path, b"{}").unwrap();
+
+        let old_time = std::time::SystemTime::now()
+            - (RECHECK_THROTTLE + std::time::Duration::from_secs(60));
+        let file = std::fs::File::options().write(true).open(&path).unwrap();
+        file.set_modified(old_time).unwrap();
+
+        assert!(!is_recently_synced(&path).await);
+
+        let _ = std::fs::remove_file(&path);
+    }
 }
