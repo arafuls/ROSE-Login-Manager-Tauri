@@ -111,29 +111,32 @@ export function HomeScreen() {
         <NewsPanel />
       </div>
 
-      <div className="space-y-2">
-        <LaunchStatusBar />
-        <div className="flex items-center justify-end gap-2">
-          <Button
-            disabled={verifying}
-            onClick={handleForceRecheck}
-            variant="outline"
-          >
-            {verifying ? (
-              <LoaderCircle className="size-4 animate-spin" />
-            ) : (
-              <RefreshCw className="size-4" />
-            )}
-            Verify Files
-          </Button>
-          <Button className="w-48" disabled={playing} onClick={handlePlay}>
-            {playing ? (
-              <LoaderCircle className="size-4 animate-spin" />
-            ) : (
-              <Play className="size-4" />
-            )}
-            Play
-          </Button>
+      <div className="grid grid-cols-[320px_1fr] gap-4">
+        <div />
+        <div className="space-y-2">
+          <LaunchStatusBar />
+          <div className="flex items-center justify-end gap-2">
+            <Button
+              disabled={verifying}
+              onClick={handleForceRecheck}
+              variant="outline"
+            >
+              {verifying ? (
+                <LoaderCircle className="size-4 animate-spin" />
+              ) : (
+                <RefreshCw className="size-4" />
+              )}
+              Verify Files
+            </Button>
+            <Button className="w-48" disabled={playing} onClick={handlePlay}>
+              {playing ? (
+                <LoaderCircle className="size-4 animate-spin" />
+              ) : (
+                <Play className="size-4" />
+              )}
+              Play
+            </Button>
+          </div>
         </div>
       </div>
     </div>
