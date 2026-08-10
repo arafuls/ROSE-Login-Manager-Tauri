@@ -130,6 +130,31 @@
   input::-ms-clear {
     display: none;
   }
+
+  /*
+   * WebView2 renders the OS's native (light grey) scrollbar by default,
+   * which clashes with the dark theme wherever content overflows (the
+   * profile list, mainly). WebView2 is Chromium-based, so the standard
+   * ::-webkit-scrollbar pseudo-elements work here same as in any Chromium
+   * browser - applied globally so every scrollable area in the app is
+   * themed, not just this one spot.
+   */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background-color: var(--border);
+    background-clip: padding-box;
+    border: 2px solid transparent;
+    border-radius: 9999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: var(--muted-foreground);
+  }
 }
 
 /* Sliding indicator for LaunchStatusBar's indeterminate progress bar. */
