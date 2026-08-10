@@ -54,7 +54,7 @@ export function HomeScreen() {
     setVerifying(true);
     try {
       await updaterForceRecheck();
-      toast.success("Verifying game files...");
+      toast.success("Game files verified");
     } catch (error) {
       toast.error("Couldn't verify game files", {
         description: error instanceof Error ? error.message : undefined,

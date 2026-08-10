@@ -89,15 +89,24 @@ type ExportBundle = {
 - `profiles_reorder(orderedEmails: string[]) -> void`
 - `profiles_export(emails: string[], exportPassword: string) -> ExportBundle`
 - `profiles_import(bundle: ExportBundle, exportPassword: string) -> { imported: number; skipped: string[] }` — skips (doesn't overwrite) profiles whose email already exists; returns which were skipped so the UI can tell the user.
-- `profiles_launch(email: string) -> void` — decrypts the profile's password and spawns `trose.exe` with it. Errors: `game_folder_not_set`, `game_executable_not_found`, `already_running` (in addition to the usual `vault_locked`/`profile_not_found`). Flips the profile's `status` to running immediately, and back to not-running automatically once the client process exits (emits `profiles-changed` both times).
+- `profiles_launch(email: string) -> void` — syncs game files (see Updater below), then decrypts the profile's password and spawns `trose.exe` with it. Errors: `game_folder_not_set`, `game_executable_not_found`, `already_running` (in addition to the usual `vault_locked`/`profile_not_found`). Flips the profile's `status` to running immediately, and back to not-running automatically once the client process exits (emits `profiles-changed` both times).
 
-### Updater (see `src-tauri/src/updater.rs` for the CLI-grammar caveat - unverified against a real rose-updater.exe)
-- `client_launch_default() -> void` — launches the client with no saved profile (game shows its own login screen). No vault interaction. Same `game_folder_not_set`/`game_executable_not_found` errors as `profiles_launch`.
-- `updater_force_recheck() -> void` — runs rose-updater to check/update game files without launching anything ("Verify File Integrity"). Errors with `updater_not_found` if `rose-updater.exe` isn't in the game folder - no fallback for a verify-only action without it.
-- Both `profiles_launch` and `client_launch_default` route through `rose-updater.exe` first when it's present in the game folder (checking/updating before launch); when it's absent, they fall back to spawning `trose.exe` directly exactly as before this existed.
+### Updater
+Update logic is vendored from rose-updater's own source (https://github.com/rednimgames/rose-updater,
+MIT licensed) into `src-tauri/src/rose_update/` and runs in-process - it does **not** shell out to
+`rose-updater.exe`. That binary was confirmed (by reading its actual `main.rs`) to always be a GUI app
+with no headless mode, and its own GUI doesn't auto-launch the game after updating either - a human has
+to click Play inside its window, which would mean two clicks in two windows instead of one. See
+`rose_update/mod.rs`'s doc comment for why the logic is vendored rather than depended on as a crate
+(their `Cargo.toml` pulls in a native GUI toolkit as an unconditional dependency).
+
+- `client_launch_default() -> void` — syncs game files, then launches the client with no saved profile (game shows its own login screen). No vault interaction. Same `game_folder_not_set`/`game_executable_not_found` errors as `profiles_launch`.
+- `updater_force_recheck() -> void` — full check-and-repair of every file against the remote manifest, ignoring the local cache ("Verify Files"). No launch afterward.
+- `profiles_launch` and `client_launch_default` use the local manifest cache (only downloading files whose hash actually changed) - cheap when already up to date. `updater_force_recheck` always does a full pass.
+- Default update URL is `https://updates2.roseonlinegame.com` (note the "2" - both the old app and an earlier version of this rewrite used the wrong `updates.roseonlinegame.com`, copied from a stale constant; confirmed correct by reading rose-updater's actual compiled-in default).
 
 ### Events
-- `client-launch-status` — `{ running: boolean; context: "profile" | "default" | "verify" }`. Emitted when any of the three commands above spawns its process (`running: true`) and again when that process exits (`running: false`). Drives the Home screen's status bar - it reflects "a process is alive," not real update-download progress, since rose-updater's own progress-reporting format isn't verified yet.
+- `client-launch-status` — `{ running: boolean; context: "profile" | "default" | "verify"; stage?: string; current?: number; max?: number }`. Emitted when any of the three commands above starts syncing (`running: true`, with live `stage`/`current`/`max` updates roughly every 150ms) and again once the whole command completes (`running: false`). Drives the Home screen's status bar with real chunk-download progress, not a fake indeterminate bar.
 
 ### Settings
 - `settings_get() -> Settings`

@@ -6,9 +6,9 @@ mod crypto;
 mod db;
 mod error;
 mod models;
+mod rose_update;
 mod settings;
 mod state;
-mod updater;
 mod win32_window;
 
 use std::sync::Mutex;

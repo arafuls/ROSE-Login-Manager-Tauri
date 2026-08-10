@@ -13,7 +13,6 @@ import { UpdaterError, type UpdaterErrorKind } from "./types";
 const KIND_MAP: Record<string, UpdaterErrorKind> = {
   game_folder_not_set: "game_folder_not_set",
   game_executable_not_found: "game_executable_not_found",
-  updater_not_found: "updater_not_found",
   already_running: "already_running",
 };
 

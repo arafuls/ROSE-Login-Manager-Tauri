@@ -1,6 +1,16 @@
 //! `profiles_launch` / `client_launch_default` / `updater_force_recheck` -
-//! spawning the ROSE Online client, optionally through `rose-updater.exe`
-//! (see `crate::updater` for the update-wrapping logic and its caveats).
+//! syncing game files (via the vendored update logic in `crate::rose_update`,
+//! see that module's doc comment for why it's vendored rather than depended
+//! on) and spawning the ROSE Online client.
+//!
+//! Unlike the earlier version of this file, launching never shells out to
+//! `rose-updater.exe`: that binary is a full GUI app (confirmed by reading
+//! its actual source) with no headless mode, and even its own GUI doesn't
+//! auto-launch the game after updating - a human has to click Play inside
+//! its window. Routing through it would mean two clicks in two different
+//! windows, not the 1-click launch this is supposed to be. Instead, update
+//! logic (manifest fetch, chunked-diff download) runs in-process, with real
+//! progress emitted to the frontend, followed by a direct `trose.exe` spawn.
 //!
 //! Accepted limitation, not a bug: `trose.exe` only accepts login
 //! credentials as command-line arguments, which are visible to any other
@@ -10,34 +20,83 @@
 //! have been informed. There is no launcher-side fix for how the game
 //! client itself accepts credentials, so this isn't attempted here.
 
+use std::path::Path;
+use std::time::Duration;
+
 use serde::Serialize;
 use tauri::{AppHandle, Emitter, Manager, State};
 use tauri_plugin_shell::process::CommandEvent;
+use tauri_plugin_shell::ShellExt;
 
 use crate::crypto;
 use crate::db::profiles;
 use crate::error::{AppError, AppResult};
+use crate::rose_update::progress::ProgressState;
+use crate::rose_update::sync::{sync_game_files, verify_game_files};
 use crate::settings;
 use crate::state::AppState;
-use crate::updater::{self, LaunchOutcome};
 use crate::win32_window;
 
 const PROFILES_CHANGED_EVENT: &str = "profiles-changed";
 const LAUNCH_STATUS_EVENT: &str = "client-launch-status";
 const LOGIN_SERVER: &str = "connect.roseonlinegame.com";
 
+/// Matches rose-updater's actual compiled-in default (verified by reading
+/// its source) - note the "2", the old app's constant and this project's
+/// earlier assumption both used the wrong "updates.roseonlinegame.com".
+const DEFAULT_UPDATE_URL: &str = "https://updates2.roseonlinegame.com";
+const MANIFEST_NAME: &str = "manifest.json";
+
 #[derive(Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 struct LaunchStatus {
     running: bool,
     /// Which action this status belongs to, so the frontend can show the
-    /// right label ("Launching...", "Verifying files...") and reset the
-    /// right button's disabled state.
+    /// right label and reset the right button's disabled state.
     context: &'static str,
+    stage: Option<String>,
+    current: Option<u64>,
+    max: Option<u64>,
 }
 
-fn emit_status(app: &AppHandle, context: &'static str, running: bool) {
-    let _ = app.emit(LAUNCH_STATUS_EVENT, LaunchStatus { running, context });
+fn emit_status(app: &AppHandle, context: &'static str, running: bool, progress: &ProgressState) {
+    let _ = app.emit(
+        LAUNCH_STATUS_EVENT,
+        LaunchStatus {
+            running,
+            context,
+            stage: Some(progress.current_stage().label().to_string()),
+            current: Some(progress.current_progress()),
+            max: Some(progress.max_progress()),
+        },
+    );
+}
+
+/// Runs `work` to completion, periodically emitting `progress`'s current
+/// values as a `client-launch-status` event so the frontend can show real
+/// percentages instead of an indeterminate bar.
+async fn run_with_progress(
+    app: &AppHandle,
+    context: &'static str,
+    progress: &ProgressState,
+    work: impl std::future::Future<Output = anyhow::Result<usize>>,
+) -> anyhow::Result<usize> {
+    emit_status(app, context, true, progress);
+
+    let mut ticker = tokio::time::interval(Duration::from_millis(150));
+    tokio::pin!(work);
+    loop {
+        tokio::select! {
+            res = &mut work => break res,
+            _ = ticker.tick() => {
+                emit_status(app, context, true, progress);
+            }
+        }
+    }
+}
+
+fn to_app_error(err: anyhow::Error) -> AppError {
+    AppError::Internal(format!("{err:#}"))
 }
 
 #[tauri::command]
@@ -52,7 +111,7 @@ pub async fn profiles_launch(
     let game_folder = current_settings
         .rose_game_folder
         .ok_or(AppError::GameFolderNotSet)?;
-    let game_folder_path = std::path::Path::new(&game_folder);
+    let game_folder_path = Path::new(&game_folder);
 
     let encrypted_password = {
         let conn = state.db.lock().unwrap();
@@ -67,29 +126,51 @@ pub async fn profiles_launch(
     let password = String::from_utf8(plaintext)
         .map_err(|e| AppError::Crypto(format!("stored password was not valid UTF-8: {e}")))?;
 
-    let client_args = vec![
-        "--login".to_string(),
-        "--server".to_string(),
-        LOGIN_SERVER.to_string(),
-        "--username".to_string(),
-        email.clone(),
-        "--password".to_string(),
-        password,
-    ];
-    let LaunchOutcome {
-        mut rx,
-        child,
-        via_updater,
-    } = updater::launch(&app, game_folder_path, &client_args)?;
+    let progress = ProgressState::default();
+    run_with_progress(
+        &app,
+        "profile",
+        &progress,
+        sync_game_files(
+            game_folder_path,
+            DEFAULT_UPDATE_URL,
+            MANIFEST_NAME,
+            false,
+            progress.clone(),
+        ),
+    )
+    .await
+    .map_err(to_app_error)?;
+    emit_status(&app, "profile", false, &progress);
+
+    let exe_path = game_folder_path.join("trose.exe");
+    if !exe_path.exists() {
+        return Err(AppError::GameExecutableNotFound);
+    }
+
+    let (mut rx, child) = app
+        .shell()
+        .command(exe_path.to_string_lossy().to_string())
+        .current_dir(game_folder_path)
+        .args([
+            "--login",
+            "--server",
+            LOGIN_SERVER,
+            "--username",
+            email.as_str(),
+            "--password",
+            password.as_str(),
+        ])
+        .spawn()
+        .map_err(|e| AppError::Internal(format!("failed to launch trose.exe: {e}")))?;
 
     {
         let conn = state.db.lock().unwrap();
         profiles::set_status(&conn, &email, true)?;
     }
     let _ = app.emit(PROFILES_CHANGED_EVENT, ());
-    emit_status(&app, "profile", true);
 
-    if current_settings.launch_client_behind && !via_updater {
+    if current_settings.launch_client_behind {
         let behind_app = app.clone();
         let child_pid = child.pid();
         tauri::async_runtime::spawn_blocking(move || {
@@ -97,9 +178,6 @@ pub async fn profiles_launch(
         });
     }
 
-    // Watch for the client exiting on a background task so the profile's
-    // "running" status clears itself without the user having to do anything -
-    // matches the old app's `ProcessManager` subscribing to `Process.Exited`.
     let watch_app = app.clone();
     let watch_email = email.clone();
     tauri::async_runtime::spawn(async move {
@@ -114,7 +192,6 @@ pub async fn profiles_launch(
             }
         }
         let _ = watch_app.emit(PROFILES_CHANGED_EVENT, ());
-        emit_status(&watch_app, "profile", false);
     });
 
     Ok(())
@@ -130,22 +207,39 @@ pub async fn client_launch_default(state: State<'_, AppState>, app: AppHandle) -
     let game_folder = current_settings
         .rose_game_folder
         .ok_or(AppError::GameFolderNotSet)?;
-    let game_folder_path = std::path::Path::new(&game_folder);
+    let game_folder_path = Path::new(&game_folder);
 
-    let client_args = vec![
-        "--login".to_string(),
-        "--server".to_string(),
-        LOGIN_SERVER.to_string(),
-    ];
-    let LaunchOutcome {
-        mut rx,
-        child,
-        via_updater,
-    } = updater::launch(&app, game_folder_path, &client_args)?;
+    let progress = ProgressState::default();
+    run_with_progress(
+        &app,
+        "default",
+        &progress,
+        sync_game_files(
+            game_folder_path,
+            DEFAULT_UPDATE_URL,
+            MANIFEST_NAME,
+            false,
+            progress.clone(),
+        ),
+    )
+    .await
+    .map_err(to_app_error)?;
+    emit_status(&app, "default", false, &progress);
 
-    emit_status(&app, "default", true);
+    let exe_path = game_folder_path.join("trose.exe");
+    if !exe_path.exists() {
+        return Err(AppError::GameExecutableNotFound);
+    }
 
-    if current_settings.launch_client_behind && !via_updater {
+    let (mut rx, child) = app
+        .shell()
+        .command(exe_path.to_string_lossy().to_string())
+        .current_dir(game_folder_path)
+        .args(["--login", "--server", LOGIN_SERVER])
+        .spawn()
+        .map_err(|e| AppError::Internal(format!("failed to launch trose.exe: {e}")))?;
+
+    if current_settings.launch_client_behind {
         let behind_app = app.clone();
         let child_pid = child.pid();
         tauri::async_runtime::spawn_blocking(move || {
@@ -153,44 +247,32 @@ pub async fn client_launch_default(state: State<'_, AppState>, app: AppHandle) -
         });
     }
 
-    let watch_app = app.clone();
-    tauri::async_runtime::spawn(async move {
-        while let Some(event) = rx.recv().await {
-            if matches!(event, CommandEvent::Terminated(_)) {
-                break;
-            }
-        }
-        emit_status(&watch_app, "default", false);
-    });
+    tauri::async_runtime::spawn(async move { while (rx.recv().await).is_some() {} });
 
     Ok(())
 }
 
-/// "Verify File Integrity" / "Force Recheck": runs rose-updater to check and
-/// update game files without launching the client. Errors with
-/// `updater_not_found` if rose-updater.exe isn't in the game folder - there's
-/// no meaningful fallback for a verify-only action without it.
+/// "Verify Files": full check-and-repair of every game file against the
+/// remote manifest, ignoring the local cache. Matches rose-updater's
+/// `--verify` flag / "Repair" button - just without opening its window.
 #[tauri::command]
 pub async fn updater_force_recheck(state: State<'_, AppState>, app: AppHandle) -> AppResult<()> {
     let current_settings = settings::load(&state.app_data_dir)?;
     let game_folder = current_settings
         .rose_game_folder
         .ok_or(AppError::GameFolderNotSet)?;
-    let game_folder_path = std::path::Path::new(&game_folder);
+    let game_folder_path = Path::new(&game_folder);
 
-    let LaunchOutcome { mut rx, .. } = updater::force_recheck(&app, game_folder_path)?;
-
-    emit_status(&app, "verify", true);
-
-    let watch_app = app.clone();
-    tauri::async_runtime::spawn(async move {
-        while let Some(event) = rx.recv().await {
-            if matches!(event, CommandEvent::Terminated(_)) {
-                break;
-            }
-        }
-        emit_status(&watch_app, "verify", false);
-    });
+    let progress = ProgressState::default();
+    run_with_progress(
+        &app,
+        "verify",
+        &progress,
+        verify_game_files(game_folder_path, DEFAULT_UPDATE_URL, MANIFEST_NAME, progress.clone()),
+    )
+    .await
+    .map_err(to_app_error)?;
+    emit_status(&app, "verify", false, &progress);
 
     Ok(())
 }
