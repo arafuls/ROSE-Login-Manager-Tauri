@@ -67,7 +67,7 @@ export function HomeScreen() {
   return (
     <div className="flex h-full flex-col gap-4 p-6">
       <div className="grid min-h-0 flex-1 grid-cols-[320px_1fr] gap-4">
-        <div className="flex flex-col gap-2 overflow-y-auto">
+        <div className="flex flex-col gap-2 overflow-y-auto overflow-x-hidden px-1">
           {loading && (
             <div className="flex h-40 items-center justify-center">
               <LoaderCircle className="size-6 animate-spin text-muted-foreground" />
@@ -124,9 +124,9 @@ export function HomeScreen() {
             ) : (
               <RefreshCw className="size-4" />
             )}
-            Force Recheck
+            Verify Files
           </Button>
-          <Button className="flex-1" disabled={playing} onClick={handlePlay}>
+          <Button className="ml-auto" disabled={playing} onClick={handlePlay}>
             {playing ? (
               <LoaderCircle className="size-4 animate-spin" />
             ) : (
