@@ -31,7 +31,7 @@ toml = "0.8"
 dirs = "5"
 
 # Windows registry lookup (game install folder, HKLM + HKCU)
-winreg = "0.52"
+winreg = "0.55"
 
 # Error ergonomics
 thiserror = "1"
