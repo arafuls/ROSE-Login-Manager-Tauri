@@ -21,8 +21,13 @@ import { ProfileFormDialog } from "./profile-form-dialog";
 export function ProfileList() {
   const { profiles, loading, refetch } = useProfiles();
   const { settings } = useSettings();
-  const { displayedProfiles, sensors, collisionDetection, handleDragEnd } =
-    useProfileReorder(profiles, refetch);
+  const {
+    displayedProfiles,
+    sensors,
+    collisionDetection,
+    handleDragEnd,
+    modifiers,
+  } = useProfileReorder(profiles, refetch);
 
   const [formOpen, setFormOpen] = useState(false);
   const [editingProfile, setEditingProfile] = useState<Profile | undefined>();
@@ -51,7 +56,7 @@ export function ProfileList() {
   };
 
   return (
-    <div className="mx-auto max-w-2xl space-y-4 p-6">
+    <div className="mx-auto flex h-full max-w-2xl flex-col gap-4 p-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-semibold text-2xl">Profiles</h1>
@@ -103,29 +108,32 @@ export function ProfileList() {
       )}
 
       {!loading && profiles.length > 0 && settings && (
-        <DndContext
-          collisionDetection={collisionDetection}
-          onDragEnd={handleDragEnd}
-          sensors={sensors}
-        >
-          <SortableContext
-            items={displayedProfiles.map((p) => p.email)}
-            strategy={verticalListSortingStrategy}
+        <div className="min-h-0 flex-1 overflow-y-auto rounded-lg border p-2">
+          <DndContext
+            collisionDetection={collisionDetection}
+            modifiers={modifiers}
+            onDragEnd={handleDragEnd}
+            sensors={sensors}
           >
-            <div className="space-y-2">
-              {displayedProfiles.map((profile) => (
-                <ProfileCard
-                  key={profile.email}
-                  onDelete={() => setDeletingProfile(profile)}
-                  onEdit={() => openEdit(profile)}
-                  onLaunch={() => handleLaunch(profile)}
-                  profile={profile}
-                  settings={settings}
-                />
-              ))}
-            </div>
-          </SortableContext>
-        </DndContext>
+            <SortableContext
+              items={displayedProfiles.map((p) => p.email)}
+              strategy={verticalListSortingStrategy}
+            >
+              <div className="space-y-2">
+                {displayedProfiles.map((profile) => (
+                  <ProfileCard
+                    key={profile.email}
+                    onDelete={() => setDeletingProfile(profile)}
+                    onEdit={() => openEdit(profile)}
+                    onLaunch={() => handleLaunch(profile)}
+                    profile={profile}
+                    settings={settings}
+                  />
+                ))}
+              </div>
+            </SortableContext>
+          </DndContext>
+        </div>
       )}
 
       <ProfileFormDialog

@@ -6,6 +6,10 @@ import {
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
+import {
+  restrictToParentElement,
+  restrictToVerticalAxis,
+} from "@dnd-kit/modifiers";
 import { arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -67,5 +71,12 @@ export function useProfileReorder(
     sensors,
     collisionDetection: closestCenter,
     handleDragEnd,
+    // Both consumers render a single vertical column (verticalListSortingStrategy),
+    // but dnd-kit's default drag transform follows the pointer on both axes -
+    // any diagonal pointer movement drags the item sideways too, which can push
+    // a scrollable ancestor into horizontal overflow and visibly shove the rest
+    // of the list over. Restricting to the vertical axis (and keeping the item
+    // within its list container) matches the layout these are actually used in.
+    modifiers: [restrictToVerticalAxis, restrictToParentElement],
   };
 }

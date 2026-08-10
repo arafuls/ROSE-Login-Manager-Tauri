@@ -21,8 +21,13 @@ import { LaunchStatusBar } from "@/features/updater/components/launch-status-bar
 
 export function HomeScreen() {
   const { profiles, loading, refetch } = useProfiles();
-  const { displayedProfiles, sensors, collisionDetection, handleDragEnd } =
-    useProfileReorder(profiles, refetch);
+  const {
+    displayedProfiles,
+    sensors,
+    collisionDetection,
+    handleDragEnd,
+    modifiers,
+  } = useProfileReorder(profiles, refetch);
 
   const [playing, setPlaying] = useState(false);
   const [verifying, setVerifying] = useState(false);
@@ -87,6 +92,7 @@ export function HomeScreen() {
           {!loading && profiles.length > 0 && (
             <DndContext
               collisionDetection={collisionDetection}
+              modifiers={modifiers}
               onDragEnd={handleDragEnd}
               sensors={sensors}
             >
