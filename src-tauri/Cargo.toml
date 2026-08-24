@@ -1,0 +1,50 @@
+[package]
+name = "rose-login-manager"
+version = "0.1.0"
+description = "ROSE Online Login Manager"
+authors = ["arafuls"]
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[build-dependencies]
+tauri-build = { version = "2.0.3", features = [] }
+
+[dependencies]
+tauri = { version = "2.11.2", features = [] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tauri-plugin-shell = "2"
+tauri-plugin-process = "2.3.1"
+
+# Persistence
+rusqlite = { version = "0.31", features = ["bundled"] }
+
+# Crypto: Argon2id passphrase -> key derivation, AES-256-GCM authenticated encryption
+argon2 = "0.5"
+aes-gcm = "0.10"
+rand = "0.8"
+base64 = "0.22"
+
+# Settings / game config
+toml = "0.8"
+dirs = "5"
+
+# Windows registry lookup (game install folder, HKLM + HKCU)
+winreg = "0.52"
+
+# Error ergonomics
+thiserror = "1"
+tauri-plugin-dialog = "2"
+data-encoding = "2"
+windows = { version = "=0.61.3", features = ["Win32_UI_WindowsAndMessaging", "Win32_Foundation"] }
+tokio = { version = "=1.48.0", features = ["sync", "fs", "time", "macros"] }
+bitar = { version = "0.14", features = ["compress", "zstd-compression"] }
+anyhow = "1"
+futures = "0.3"
+reqwest = { version = "0.13", default-features = false, features = ["json", "brotli", "rustls"] }
+tracing = "0.1"
+
+[features]
+# This feature is used for production builds or when a dev server is not specified, DO NOT REMOVE!!
+custom-protocol = ["tauri/custom-protocol"]

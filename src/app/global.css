@@ -1,0 +1,169 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --font-sans: "Josefin Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-heading: "Spectral SC", ui-serif, Georgia, serif;
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+/*
+ * Single committed dark theme, sourced from roseonlinegame.com's actual
+ * computed CSS (no light mode - the site itself doesn't have one either,
+ * and this app never toggles a .dark class, so there's no reason to carry
+ * an unused light palette + a dead .dark variant side by side).
+ *
+ * background/border/muted-foreground are the site's exact values (#0b1822
+ * "body", #334459 "pickled-bluewood", #9cabb9 "gull-gray"). card/secondary/
+ * accent surface tones are derived shades between background and border -
+ * the site does the equivalent with opacity variants of pickled-bluewood
+ * over its body color.
+ *
+ * primary/ring is #eb9020, sampled directly from the actual logo image
+ * (src/assets/rose-logo.webp) rather than the site's own "rood" red-orange
+ * UI accent - closer to the logo's gold/amber gradient (#fddf55 -> #e66729)
+ * than the site's hover-state red.
+ */
+:root {
+  --radius: 0.625rem;
+  --background: #0b1822;
+  --foreground: #e8edf2;
+  --card: #10202c;
+  --card-foreground: #e8edf2;
+  --popover: #10202c;
+  --popover-foreground: #e8edf2;
+  --primary: #eb9020;
+  --primary-foreground: #0b1822;
+  --secondary: #16283a;
+  --secondary-foreground: #e8edf2;
+  --muted: #16283a;
+  --muted-foreground: #9cabb9;
+  --accent: #1d3244;
+  --accent-foreground: #e8edf2;
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: #334459;
+  --input: #334459;
+  --ring: #eb9020;
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+  --sidebar: #0b1822;
+  --sidebar-foreground: #e8edf2;
+  --sidebar-primary: #eb9020;
+  --sidebar-primary-foreground: #0b1822;
+  --sidebar-accent: #1d3244;
+  --sidebar-accent-foreground: #e8edf2;
+  --sidebar-border: #334459;
+  --sidebar-ring: #eb9020;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    /* For native desktop app feeling disallow text selection. */
+    @apply select-none;
+
+    /* Disable overscroll/bouncing */
+    @apply h-full overscroll-none;
+  }
+  body {
+    @apply bg-background font-sans text-foreground;
+  }
+
+  h1,
+  h2,
+  h3,
+  [data-slot="card-title"],
+  [data-slot="dialog-title"],
+  [data-slot="alert-dialog-title"] {
+    @apply font-heading;
+  }
+
+  /*
+   * Tauri's Windows webview is WebView2 (Chromium + legacy Edge
+   * compatibility), which still draws its own native reveal/clear icon on
+   * password inputs via ::-ms-reveal/::-ms-clear. Without this, it stacks
+   * on top of any custom show/hide password button (e.g. profile-form-dialog),
+   * showing two eye icons. A plain browser doesn't render these, which is
+   * why this didn't show up in earlier browser-preview testing.
+   */
+  input::-ms-reveal,
+  input::-ms-clear {
+    display: none;
+  }
+
+  /*
+   * WebView2 renders the OS's native (light grey) scrollbar by default,
+   * which clashes with the dark theme wherever content overflows (the
+   * profile list, mainly). WebView2 is Chromium-based, so the standard
+   * ::-webkit-scrollbar pseudo-elements work here same as in any Chromium
+   * browser - applied globally so every scrollable area in the app is
+   * themed, not just this one spot.
+   */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background-color: var(--border);
+    background-clip: padding-box;
+    border: 2px solid transparent;
+    border-radius: 9999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: var(--muted-foreground);
+  }
+}
+
+/* Sliding indicator for LaunchStatusBar's indeterminate progress bar. */
+@keyframes indeterminate {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(300%);
+  }
+}
