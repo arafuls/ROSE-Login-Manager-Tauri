@@ -159,6 +159,16 @@ pub fn profiles_export(
     })
 }
 
+/// Writes an already-built export bundle to a path the user picked via the
+/// native save dialog (`@tauri-apps/plugin-dialog`'s `save()`) - the write-
+/// side counterpart to `profiles_read_export_file`, same reasoning: no
+/// `tauri-plugin-fs` needed for a path the user just explicitly chose.
+#[tauri::command]
+pub fn profiles_write_export_file(bundle: ExportBundle, path: String) -> AppResult<()> {
+    let json = serde_json::to_string_pretty(&bundle)?;
+    std::fs::write(&path, json).map_err(Into::into)
+}
+
 #[tauri::command]
 pub fn profiles_import(
     bundle: ExportBundle,

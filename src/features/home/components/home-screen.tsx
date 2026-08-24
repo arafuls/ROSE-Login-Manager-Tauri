@@ -126,19 +126,21 @@ export function HomeScreen() {
         <div className="space-y-2">
           <LaunchStatusBar />
           <div className="flex items-center justify-end gap-2">
-            <Button
-              disabled={verifying}
-              onClick={handleForceRecheck}
-              size="sm"
-              variant="outline"
-            >
-              {verifying ? (
-                <LoaderCircle className="size-4 animate-spin" />
-              ) : (
-                <RefreshCw className="size-4" />
-              )}
-              Verify Files
-            </Button>
+            {settings?.linuxLaunchMode !== "Native" && (
+              <Button
+                disabled={verifying}
+                onClick={handleForceRecheck}
+                size="sm"
+                variant="outline"
+              >
+                {verifying ? (
+                  <LoaderCircle className="size-4 animate-spin" />
+                ) : (
+                  <RefreshCw className="size-4" />
+                )}
+                Verify Files
+              </Button>
+            )}
             <Button
               className="w-28"
               disabled={playing}

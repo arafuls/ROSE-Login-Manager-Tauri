@@ -121,6 +121,13 @@ export function profilesReadExportFile(path: string): Promise<string> {
   return invoke("profiles_read_export_file", { path });
 }
 
+export function profilesWriteExportFile(
+  bundle: ExportBundle,
+  path: string
+): Promise<void> {
+  return invoke("profiles_write_export_file", { bundle, path });
+}
+
 export async function profilesImport(
   bundle: ExportBundle,
   exportPassword: string

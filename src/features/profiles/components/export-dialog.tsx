@@ -1,4 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { save } from "@tauri-apps/plugin-dialog";
 import { LoaderCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -23,7 +24,10 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { profilesExport } from "@/features/profiles/api";
+import {
+  profilesExport,
+  profilesWriteExportFile,
+} from "@/features/profiles/api";
 import type { Profile } from "@/features/profiles/types";
 import { isBackendError } from "@/lib/tauri-errors";
 
@@ -78,11 +82,18 @@ export function ExportDialog({
       return;
     }
     try {
+      const path = await save({
+        defaultPath: "rose-profiles-export.json",
+        filters: [{ extensions: ["json"], name: "ROSE profile export" }],
+      });
+      if (!path) {
+        return;
+      }
       const bundle = await profilesExport(
         Array.from(selected),
         values.exportPassword
       );
-      downloadBundle(bundle);
+      await profilesWriteExportFile(bundle, path);
       toast.success(
         `Exported ${selected.size} profile${selected.size === 1 ? "" : "s"}`
       );
@@ -171,22 +182,4 @@ export function ExportDialog({
       </DialogContent>
     </Dialog>
   );
-}
-
-function downloadBundle(bundle: { version: number; ciphertext: string }): void {
-  // DEVIATION: the real app will use a native save dialog
-  // (`@tauri-apps/plugin-dialog` + `@tauri-apps/plugin-fs`) to write the
-  // file to disk. That plugin isn't wired up yet and has no equivalent in a
-  // plain browser preview, so this mock triggers a normal browser file
-  // download instead - the `ExportBundle` shape/content is identical either
-  // way, only the "how it reaches disk" part differs.
-  const blob = new Blob([JSON.stringify(bundle, null, 2)], {
-    type: "application/json",
-  });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "rose-profiles-export.json";
-  a.click();
-  URL.revokeObjectURL(url);
 }

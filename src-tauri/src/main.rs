@@ -66,6 +66,7 @@ fn main() {
             commands::profiles::profiles_delete,
             commands::profiles::profiles_reorder,
             commands::profiles::profiles_export,
+            commands::profiles::profiles_write_export_file,
             commands::profiles::profiles_import,
             commands::profiles::profiles_read_export_file,
             commands::process::profiles_launch,
