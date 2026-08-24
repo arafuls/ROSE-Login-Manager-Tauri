@@ -25,6 +25,7 @@ import { Input } from "@/components/ui/input";
 import { profilesCreate, profilesUpdate } from "@/features/profiles/api";
 import type { Profile } from "@/features/profiles/types";
 import { ProfileError } from "@/features/profiles/types";
+import { isBackendError } from "@/lib/tauri-errors";
 
 const createSchema = z.object({
   name: z.string().trim().min(1, "Name is required"),
@@ -113,8 +114,9 @@ export function ProfileFormDialog({
         form.setError("email", { type: "server", message: error.message });
         return;
       }
-      const message =
-        error instanceof Error ? error.message : "Something went wrong.";
+      const message = isBackendError(error)
+        ? error.message
+        : "Something went wrong.";
       toast.error(
         mode === "create" ? "Couldn't add profile" : "Couldn't update profile",
         {

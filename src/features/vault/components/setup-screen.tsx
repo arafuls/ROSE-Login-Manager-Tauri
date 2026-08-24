@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useVault } from "@/features/vault/vault-provider";
+import { isBackendError } from "@/lib/tauri-errors";
 
 const setupSchema = z
   .object({
@@ -44,8 +45,9 @@ export function SetupScreen() {
     try {
       await setup(values.passphrase);
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Failed to set up the vault.";
+      const message = isBackendError(error)
+        ? error.message
+        : "Failed to set up the vault.";
       form.setError("root", { type: "server", message });
     }
   };

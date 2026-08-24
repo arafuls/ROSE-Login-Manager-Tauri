@@ -12,6 +12,7 @@ import type { Profile } from "@/features/profiles/types";
 import { useProfileReorder } from "@/features/profiles/use-profile-reorder";
 import { useProfiles } from "@/features/profiles/use-profiles";
 import { useSettings } from "@/features/settings/use-settings";
+import { isBackendError } from "@/lib/tauri-errors";
 import { DeleteProfileDialog } from "./delete-profile-dialog";
 import { ExportDialog } from "./export-dialog";
 import { ImportDialog } from "./import-dialog";
@@ -40,7 +41,7 @@ export function ProfileList() {
       await profilesLaunch(profile.email);
     } catch (error) {
       toast.error(`Couldn't launch ${profile.name}`, {
-        description: error instanceof Error ? error.message : undefined,
+        description: isBackendError(error) ? error.message : undefined,
       });
     }
   };

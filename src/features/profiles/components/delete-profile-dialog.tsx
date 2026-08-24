@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { profilesDelete } from "@/features/profiles/api";
 import type { Profile } from "@/features/profiles/types";
+import { isBackendError } from "@/lib/tauri-errors";
 
 interface DeleteProfileDialogProps {
   onOpenChange: (open: boolean) => void;
@@ -42,7 +43,7 @@ export function DeleteProfileDialog({
       onOpenChange(false);
     } catch (error) {
       toast.error("Couldn't delete profile", {
-        description: error instanceof Error ? error.message : undefined,
+        description: isBackendError(error) ? error.message : undefined,
       });
     } finally {
       setDeleting(false);

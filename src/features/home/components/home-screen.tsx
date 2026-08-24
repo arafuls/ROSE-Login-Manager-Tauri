@@ -18,6 +18,7 @@ import {
   updaterForceRecheck,
 } from "@/features/updater/api";
 import { LaunchStatusBar } from "@/features/updater/components/launch-status-bar";
+import { isBackendError } from "@/lib/tauri-errors";
 
 export function HomeScreen() {
   const { profiles, loading, refetch } = useProfiles();
@@ -37,7 +38,7 @@ export function HomeScreen() {
       await profilesLaunch(profile.email);
     } catch (error) {
       toast.error(`Couldn't launch ${profile.name}`, {
-        description: error instanceof Error ? error.message : undefined,
+        description: isBackendError(error) ? error.message : undefined,
       });
     }
   };
@@ -48,7 +49,7 @@ export function HomeScreen() {
       await clientLaunchDefault();
     } catch (error) {
       toast.error("Couldn't launch ROSE Online", {
-        description: error instanceof Error ? error.message : undefined,
+        description: isBackendError(error) ? error.message : undefined,
       });
     } finally {
       setPlaying(false);
@@ -62,7 +63,7 @@ export function HomeScreen() {
       toast.success("Game files verified");
     } catch (error) {
       toast.error("Couldn't verify game files", {
-        description: error instanceof Error ? error.message : undefined,
+        description: isBackendError(error) ? error.message : undefined,
       });
     } finally {
       setVerifying(false);

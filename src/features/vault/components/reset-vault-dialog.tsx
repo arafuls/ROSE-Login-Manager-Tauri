@@ -14,6 +14,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useVault } from "@/features/vault/vault-provider";
+import { isBackendError } from "@/lib/tauri-errors";
 
 const CONFIRMATION_PHRASE = "RESET";
 
@@ -44,7 +45,7 @@ export function ResetVaultDialog({
       await reset();
     } catch (error) {
       toast.error("Couldn't reset the vault", {
-        description: error instanceof Error ? error.message : undefined,
+        description: isBackendError(error) ? error.message : undefined,
       });
       setResetting(false);
     }

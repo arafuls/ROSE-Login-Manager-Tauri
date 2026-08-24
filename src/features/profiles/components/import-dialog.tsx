@@ -29,6 +29,7 @@ import {
   profilesReadExportFile,
 } from "@/features/profiles/api";
 import type { ExportBundle, ImportResult } from "@/features/profiles/types";
+import { isBackendError } from "@/lib/tauri-errors";
 
 const importSchema = z.object({
   exportPassword: z.string().min(1, "Enter the export password"),
@@ -124,7 +125,7 @@ export function ImportDialog({
       }
     } catch (error) {
       setFileError(
-        error instanceof Error ? error.message : "Couldn't open that file."
+        isBackendError(error) ? error.message : "Couldn't open that file."
       );
     } finally {
       setPicking(false);
@@ -155,7 +156,7 @@ export function ImportDialog({
       // not swallowed - same principle as the duplicate-email fix.
       form.setError("exportPassword", {
         type: "server",
-        message: error instanceof Error ? error.message : "Import failed.",
+        message: isBackendError(error) ? error.message : "Import failed.",
       });
     }
   };

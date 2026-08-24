@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useVault } from "@/features/vault/vault-provider";
+import { isBackendError } from "@/lib/tauri-errors";
 import { ResetVaultDialog } from "./reset-vault-dialog";
 
 const unlockSchema = z.object({
@@ -81,8 +82,9 @@ function UnlockForm({
       // Wrong-passphrase (or any other unlock failure) MUST be visible to
       // the user, not a silent no-op - this is one of the two UX bugs from
       // the old app's design review that we are explicitly fixing.
-      const message =
-        error instanceof Error ? error.message : "Failed to unlock the vault.";
+      const message = isBackendError(error)
+        ? error.message
+        : "Failed to unlock the vault.";
       form.setError("passphrase", { type: "server", message });
       form.setValue("passphrase", "");
     }
@@ -170,8 +172,9 @@ function RecoverForm({
     try {
       await recover(values.recoveryKey, values.newPassphrase);
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Recovery failed.";
+      const message = isBackendError(error)
+        ? error.message
+        : "Recovery failed.";
       form.setError("recoveryKey", { type: "server", message });
     }
   };

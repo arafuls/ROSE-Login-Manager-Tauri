@@ -29,6 +29,7 @@ import {
   type LoginScreen,
 } from "@/features/settings/types";
 import { useSettings } from "@/features/settings/use-settings";
+import { isBackendError } from "@/lib/tauri-errors";
 
 export function SettingsPage() {
   const { settings, loading } = useSettings();
@@ -58,7 +59,7 @@ export function SettingsPage() {
       await settingsUpdate(patch);
     } catch (error) {
       toast.error("Couldn't save that setting", {
-        description: error instanceof Error ? error.message : undefined,
+        description: isBackendError(error) ? error.message : undefined,
       });
     }
   };

@@ -3,6 +3,7 @@ import { Copy, Minus, Square, X } from "lucide-react";
 import { type ButtonHTMLAttributes, useEffect, useState } from "react";
 import { toast } from "sonner";
 import roseLogo from "@/assets/rose-logo.webp";
+import { isBackendError } from "@/lib/tauri-errors";
 import { cn } from "@/lib/utils";
 
 const appWindow = getCurrentWindow();
@@ -20,7 +21,7 @@ const appWindow = getCurrentWindow();
 function runWindowCommand(action: () => Promise<void>, label: string) {
   action().catch((error) => {
     toast.error(`Couldn't ${label} the window`, {
-      description: error instanceof Error ? error.message : undefined,
+      description: isBackendError(error) ? error.message : undefined,
     });
   });
 }

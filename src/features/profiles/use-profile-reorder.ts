@@ -13,6 +13,7 @@ import {
 import { arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import { useState } from "react";
 import { toast } from "sonner";
+import { isBackendError } from "@/lib/tauri-errors";
 import { profilesReorder } from "./api";
 import type { Profile } from "./types";
 
@@ -58,7 +59,7 @@ export function useProfileReorder(
       await profilesReorder(next);
     } catch (error) {
       toast.error("Couldn't save the new order", {
-        description: error instanceof Error ? error.message : undefined,
+        description: isBackendError(error) ? error.message : undefined,
       });
       await refetch();
     } finally {

@@ -25,6 +25,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { profilesExport } from "@/features/profiles/api";
 import type { Profile } from "@/features/profiles/types";
+import { isBackendError } from "@/lib/tauri-errors";
 
 const exportSchema = z.object({
   exportPassword: z
@@ -88,7 +89,7 @@ export function ExportDialog({
       onOpenChange(false);
     } catch (error) {
       toast.error("Export failed", {
-        description: error instanceof Error ? error.message : undefined,
+        description: isBackendError(error) ? error.message : undefined,
       });
     }
   };
