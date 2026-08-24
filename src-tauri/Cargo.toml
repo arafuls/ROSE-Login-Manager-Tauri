@@ -1,6 +1,6 @@
 [package]
 name = "rose-login-manager"
-version = "0.2.0"
+version = "1.0.0"
 description = "ROSE Online Login Manager"
 authors = ["arafuls"]
 edition = "2021"

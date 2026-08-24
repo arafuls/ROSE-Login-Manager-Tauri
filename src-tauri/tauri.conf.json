@@ -17,7 +17,7 @@
     ]
   },
   "productName": "ROSE Login Manager",
-  "version": "0.2.0",
+  "version": "1.0.0",
   "identifier": "rose-login-manager-tauri",
   "plugins": {
     "process": {
