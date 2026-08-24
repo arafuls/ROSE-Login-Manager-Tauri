@@ -9,6 +9,7 @@ export interface BackendError {
   message: string;
 }
 
+/** Type guard narrowing a catch-block `unknown` down to `BackendError`. */
 export function isBackendError(error: unknown): error is BackendError {
   return (
     typeof error === "object" &&

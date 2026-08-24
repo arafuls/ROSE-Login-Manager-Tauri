@@ -1,3 +1,9 @@
+/**
+ * Renders a single saved profile as a row in the Profiles page's list
+ * (see profile-list.tsx, which owns drag-reorder state and the delete
+ * confirmation flow this component's buttons trigger).
+ */
+
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { GripVertical, LoaderCircle, Pencil, Play, Trash2 } from "lucide-react";
@@ -22,6 +28,11 @@ interface ProfileCardProps {
   settings: Settings;
 }
 
+/**
+ * One draggable, actionable row - status dot, name/email (respecting
+ * displayEmail/maskEmail), and launch/edit/delete controls for a single
+ * saved login.
+ */
 export function ProfileCard({
   profile,
   settings,
@@ -51,6 +62,9 @@ export function ProfileCard({
     isDragging,
   } = useSortable({ id: profile.email });
 
+  // dnd-kit requires the drag transform/transition applied as an inline
+  // style on the sortable element itself - it can't be expressed as a
+  // Tailwind class since the values are computed per-drag, not static.
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,

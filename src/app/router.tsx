@@ -1,3 +1,5 @@
+/** The app's route tree: Home/Profiles/Settings nested under the root shell, plus a catch-all 404. */
+
 import { createBrowserRouter, RouterProvider } from "react-router";
 
 const createAppRouter = () =>
@@ -17,6 +19,7 @@ const createAppRouter = () =>
     },
   ]);
 
+/** Renders the route tree described in the file header. */
 export default function AppRouter() {
   return <RouterProvider router={createAppRouter()} />;
 }

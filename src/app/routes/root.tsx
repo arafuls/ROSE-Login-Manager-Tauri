@@ -1,3 +1,9 @@
+/**
+ * The root route: gates everything behind the vault (VaultGate), then
+ * renders the nav chrome (sidebar or topbar, per the navStyle setting)
+ * around whichever child route (Home/Profiles/Settings) is active.
+ */
+
 import { useLayoutEffect, useRef } from "react";
 import { Outlet } from "react-router";
 import { AppSidebar } from "@/components/app-sidebar";

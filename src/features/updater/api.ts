@@ -1,9 +1,10 @@
 /**
- * Updater API layer - see docs/command-contract.md, "Updater" and "Events"
- * sections. The exact rose-updater.exe CLI grammar behind these commands is
- * unverified (see src-tauri/src/updater.rs) - this layer just calls the
- * Tauri commands, the uncertainty lives entirely on the Rust side.
+ * Game launch/update API layer - bindings for the commands in
+ * src-tauri/src/commands/process.rs, which run the vendored update logic in
+ * src-tauri/src/rose_update/ in-process rather than shelling out to a
+ * separate updater binary.
  */
+
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { isBackendError } from "@/lib/tauri-errors";
@@ -16,6 +17,7 @@ const KIND_MAP: Record<string, UpdaterErrorKind> = {
   already_running: "already_running",
 };
 
+/** See the equivalent note in features/profiles/api.ts's toProfileError. */
 function toUpdaterError(error: unknown): UpdaterError {
   if (isBackendError(error)) {
     return new UpdaterError(KIND_MAP[error.kind] ?? "unknown", error.message);
@@ -23,6 +25,7 @@ function toUpdaterError(error: unknown): UpdaterError {
   return new UpdaterError("unknown");
 }
 
+/** Syncs game files if needed, then launches the client with no saved profile. */
 export async function clientLaunchDefault(): Promise<void> {
   try {
     await invoke("client_launch_default");
@@ -31,6 +34,7 @@ export async function clientLaunchDefault(): Promise<void> {
   }
 }
 
+/** "Verify Files": full check-and-repair of every game file against the remote manifest. */
 export async function updaterForceRecheck(): Promise<void> {
   try {
     await invoke("updater_force_recheck");

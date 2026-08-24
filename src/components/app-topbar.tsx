@@ -1,3 +1,5 @@
+/** The classic top toolbar, one of the two selectable nav styles (see app-sidebar.tsx). */
+
 import { House, LogOut, Settings as SettingsIcon, Users } from "lucide-react";
 import type { ComponentType } from "react";
 import { NavLink } from "react-router";
@@ -28,6 +30,7 @@ export function AppTopbar() {
   );
 }
 
+/** One nav link in the topbar, styled active/idle per the current route. */
 function NavTab({
   to,
   icon: Icon,

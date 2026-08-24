@@ -10,11 +10,13 @@ use crate::settings;
 use crate::state::AppState;
 use crate::theme;
 
+/// Lists every built-in palette followed by every saved custom theme.
 #[tauri::command]
 pub fn theme_list(state: State<AppState>) -> AppResult<Vec<Theme>> {
     theme::list(&state.app_data_dir)
 }
 
+/// Creates a new theme (`input.id: None`) or updates an existing one in place.
 #[tauri::command]
 pub fn theme_save(input: ThemeInput, state: State<AppState>) -> AppResult<Theme> {
     theme::upsert(&state.app_data_dir, input)
@@ -39,6 +41,7 @@ pub fn theme_delete(id: String, state: State<AppState>) -> AppResult<()> {
     Ok(())
 }
 
+/// Writes a theme to disk in its portable (id-less) export shape.
 #[tauri::command]
 pub fn theme_export_to_file(id: String, path: String, state: State<AppState>) -> AppResult<()> {
     let found = theme::get(&state.app_data_dir, &id)?;

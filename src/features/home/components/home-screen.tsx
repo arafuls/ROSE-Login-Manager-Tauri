@@ -1,3 +1,5 @@
+/** The "/" route's screen: quick-launch profile list, news panel, and PLAY/Verify Files controls. */
+
 import { DndContext } from "@dnd-kit/core";
 import {
   SortableContext,
@@ -21,6 +23,7 @@ import {
 import { LaunchStatusBar } from "@/features/updater/components/launch-status-bar";
 import { isBackendError } from "@/lib/tauri-errors";
 
+/** Renders the screen described in the file header. */
 export function HomeScreen() {
   const { profiles, loading, refetch } = useProfiles();
   const { settings } = useSettings();

@@ -1,3 +1,5 @@
+/** Vault state/actions as React context - the single source of truth for whether the app is unlocked. */
+
 import {
   createContext,
   type ReactNode,
@@ -43,6 +45,7 @@ interface VaultContextValue {
 
 const VaultContext = createContext<VaultContextValue | null>(null);
 
+/** Provides vault status and every vault action described in the file header. */
 export function VaultProvider({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<VaultStatus>("checking");
   const [recoveryKey, setRecoveryKey] = useState<string | null>(null);
@@ -130,6 +133,7 @@ export function VaultProvider({ children }: { children: ReactNode }) {
   );
 }
 
+/** Reads the vault context - throws outside a `VaultProvider`. */
 export function useVault(): VaultContextValue {
   const ctx = useContext(VaultContext);
   if (!ctx) {

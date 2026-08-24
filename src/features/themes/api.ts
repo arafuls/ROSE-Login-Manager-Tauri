@@ -1,6 +1,9 @@
+/** Theme CRUD - Tauri command bindings plus in-process change notifications. */
+
 import { invoke } from "@tauri-apps/api/core";
 import type { Theme, ThemeInput } from "./types";
 
+/** Lists every built-in palette followed by every saved custom theme. */
 export function themeList(): Promise<Theme[]> {
   return invoke("theme_list");
 }
@@ -25,6 +28,7 @@ export function onThemesChanged(listener: Listener): () => void {
   return () => listeners.delete(listener);
 }
 
+/** Refetches the theme list and broadcasts it to every `onThemesChanged` listener. */
 async function notifyThemesChanged(): Promise<void> {
   const list = await themeList();
   for (const listener of listeners) {
@@ -32,21 +36,25 @@ async function notifyThemesChanged(): Promise<void> {
   }
 }
 
+/** Creates or updates a theme, then notifies every `useThemes()` instance. */
 export async function themeSave(input: ThemeInput): Promise<Theme> {
   const saved = await invoke<Theme>("theme_save", { input });
   await notifyThemesChanged();
   return saved;
 }
 
+/** Deletes a saved theme, then notifies every `useThemes()` instance. */
 export async function themeDelete(id: string): Promise<void> {
   await invoke("theme_delete", { id });
   await notifyThemesChanged();
 }
 
+/** Writes a theme to `path` in its portable (id-less) export shape. */
 export function themeExportToFile(id: string, path: string): Promise<void> {
   return invoke("theme_export_to_file", { id, path });
 }
 
+/** Imports a portable theme file as a new saved theme, then notifies every `useThemes()` instance. */
 export async function themeImportFromFile(path: string): Promise<Theme> {
   const imported = await invoke<Theme>("theme_import_from_file", { path });
   await notifyThemesChanged();

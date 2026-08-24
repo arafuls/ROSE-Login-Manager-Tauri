@@ -1,3 +1,5 @@
+/** First-run vault setup screen: choose and confirm a passphrase. */
+
 import { zodResolver } from "@hookform/resolvers/zod";
 import { LoaderCircle, ShieldCheck } from "lucide-react";
 import { useForm } from "react-hook-form";
@@ -34,6 +36,7 @@ const setupSchema = z
 
 type SetupFormValues = z.infer<typeof setupSchema>;
 
+/** Renders the screen described in the file header. */
 export function SetupScreen() {
   const { setup } = useVault();
   const form = useForm<SetupFormValues>({

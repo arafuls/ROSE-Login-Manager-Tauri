@@ -1,3 +1,5 @@
+/** The app's fully custom titlebar - see the TitleBar component's own doc comment below. */
+
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { Copy, Minus, Square, X } from "lucide-react";
 import { type ButtonHTMLAttributes, useEffect, useState } from "react";
@@ -153,6 +155,7 @@ export function TitleBar() {
   );
 }
 
+/** One window-control button (minimize/maximize/close) in the titlebar. */
 function TitleBarButton({
   className,
   onDoubleClick,

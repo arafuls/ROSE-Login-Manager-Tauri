@@ -1,3 +1,5 @@
+/** Dialog for importing a password-protected profile export bundle. */
+
 import { zodResolver } from "@hookform/resolvers/zod";
 import { downloadDir } from "@tauri-apps/api/path";
 import { open } from "@tauri-apps/plugin-dialog";
@@ -61,11 +63,13 @@ async function pickExportFile(): Promise<PickedFile | null> {
   return { name, path };
 }
 
+/** Reads and parses the picked file's contents as an `ExportBundle`. */
 async function parseExportFile(file: PickedFile): Promise<ExportBundle> {
   const text = await profilesReadExportFile(file.path);
   return JSON.parse(text);
 }
 
+/** Toasts a summary of what an import actually did. */
 function notifyImportResult(result: ImportResult): void {
   if (result.imported > 0) {
     toast.success(
@@ -90,6 +94,7 @@ interface ImportDialogProps {
   open: boolean;
 }
 
+/** Renders the dialog described in the file header. */
 export function ImportDialog({
   open: dialogOpen,
   onOpenChange,

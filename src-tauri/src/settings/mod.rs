@@ -40,6 +40,7 @@ pub fn load(app_data_dir: &Path) -> AppResult<Settings> {
     Ok(settings)
 }
 
+/// Writes `settings` to `settings.toml`, creating the app data dir if needed.
 pub fn save(app_data_dir: &Path, settings: &Settings) -> AppResult<()> {
     fs::create_dir_all(app_data_dir)?;
     let contents = toml::to_string_pretty(settings)?;

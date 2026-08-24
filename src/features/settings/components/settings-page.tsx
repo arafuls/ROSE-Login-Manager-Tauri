@@ -1,3 +1,5 @@
+/** The "/settings" route's screen: Security, Game folder, General, Game settings, and Appearance cards. */
+
 import { platform } from "@tauri-apps/plugin-os";
 import { FolderSearch, LoaderCircle, RefreshCw, Wand2 } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -57,6 +59,7 @@ function gameFolderPlaceholder(linuxLaunchMode: LinuxLaunchMode): string {
     : "~/.wine/drive_c/Program Files/ROSE Online";
 }
 
+/** Renders the screen described in the file header. */
 export function SettingsPage() {
   const { settings, loading } = useSettings();
   const [locating, setLocating] = useState(false);
@@ -346,6 +349,7 @@ export function SettingsPage() {
   );
 }
 
+/** One label/description/Switch row, shared by every boolean setting on this page. */
 function SettingRow({
   label,
   description,

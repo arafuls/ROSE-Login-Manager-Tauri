@@ -1,3 +1,5 @@
+/** The Settings page's Appearance card: theme picker/editor and the navigation-style toggle. */
+
 import { open, save } from "@tauri-apps/plugin-dialog";
 import { Copy, Download, Pencil, Plus, Trash2, Upload } from "lucide-react";
 import { useState } from "react";
@@ -40,6 +42,7 @@ import { useThemes } from "@/features/themes/use-themes";
 import { isBackendError } from "@/lib/tauri-errors";
 import { ThemeEditorDialog, type ThemeEditorSeed } from "./theme-editor-dialog";
 
+/** Renders the card described in the file header. */
 export function AppearanceCard() {
   const { settings, refetch: refetchSettings } = useSettings();
   const { themes } = useThemes();

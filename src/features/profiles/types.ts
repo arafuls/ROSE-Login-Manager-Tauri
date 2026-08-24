@@ -1,5 +1,6 @@
 /** Mirrors the `Profile` / input / export types in docs/command-contract.md exactly. */
 
+/** A profile as seen by the frontend - password is intentionally absent. */
 export interface Profile {
   email: string;
   name: string;
@@ -8,23 +9,27 @@ export interface Profile {
   // Note: password never leaves Rust in plaintext. Frontend never sees it.
 }
 
+/** `profilesCreate`'s payload for a new saved login. */
 export interface NewProfileInput {
   email: string;
   name: string;
   password: string; // plaintext in-memory only, sent once over invoke(), never logged
 }
 
+/** `profilesUpdate`'s payload - every field optional, missing ones left unchanged. */
 export interface UpdateProfileInput {
   email?: string;
   name?: string;
   password?: string; // omit to leave password unchanged
 }
 
+/** A password-protected snapshot of selected profiles, from `profilesExport`. */
 export interface ExportBundle {
   ciphertext: string; // base64, re-encrypted under the export password, not the vault key
   version: 1;
 }
 
+/** Returned by `profilesImport` after processing an `ExportBundle`. */
 export interface ImportResult {
   imported: number;
   skipped: string[];
@@ -54,6 +59,7 @@ export class ProfileError extends Error {
   }
 }
 
+/** The generic message shown when a `ProfileError` is constructed without an explicit one. */
 function defaultMessageFor(kind: ProfileErrorKind): string {
   switch (kind) {
     case "duplicate_email":

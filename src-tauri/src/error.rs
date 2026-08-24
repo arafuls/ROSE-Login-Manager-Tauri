@@ -7,6 +7,8 @@
 
 use serde::Serialize;
 
+/// Every distinct failure mode a command can return, each mapped to a
+/// stable `kind` string (see `kind` below) for the frontend to match on.
 #[derive(Debug, thiserror::Error)]
 pub enum AppError {
     #[error("vault is locked")]
@@ -69,6 +71,7 @@ pub enum AppError {
 }
 
 impl AppError {
+    /// The stable discriminant serialized as `AppError`'s `kind` field.
     fn kind(&self) -> &'static str {
         match self {
             AppError::VaultLocked => "vault_locked",

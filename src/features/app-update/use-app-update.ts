@@ -1,3 +1,9 @@
+/**
+ * App (not game) update checking - a silent check on launch plus a
+ * manual "Check for updates" button, both funneling into the same
+ * download/install/relaunch flow.
+ */
+
 import { relaunch } from "@tauri-apps/plugin-process";
 import type { Update } from "@tauri-apps/plugin-updater";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -6,6 +12,7 @@ import { appCheckForUpdate } from "./api";
 
 const TOAST_ID = "app-update";
 
+/** Downloads and installs `update`, surfacing live progress via a toast, then relaunches. */
 async function downloadAndInstall(update: Update) {
   let downloaded = 0;
   let total: number | undefined;
@@ -32,6 +39,7 @@ async function downloadAndInstall(update: Update) {
   await relaunch();
 }
 
+/** Shows a toast offering to install `update`, wired to `downloadAndInstall`. */
 function offerUpdate(update: Update) {
   toast(`Update available: v${update.version}`, {
     id: TOAST_ID,

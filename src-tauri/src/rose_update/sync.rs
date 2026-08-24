@@ -27,11 +27,15 @@ use super::progress::{ProgressStage, ProgressState};
 const LOCAL_MANIFEST_VERSION: usize = 1;
 const TEXT_FILE_EXTENSIONS: &[&str; 1] = &["xml"];
 
+/// One file `get_remote_files` needs to clone/verify against its remote archive.
 struct FileToDownload {
     local_path: String,
     remote_path: String,
 }
 
+/// Which `ProgressStage`s to report and whether to delete stale local text
+/// files first - the two things that differ between a normal update pass
+/// (`update()`) and a full verify/repair pass (`verify()`).
 #[derive(Clone, Copy)]
 struct RemoteFilePass {
     scan_stage: ProgressStage,
@@ -68,6 +72,8 @@ fn should_remove_text_file(pass: RemoteFilePass, path: &Path) -> bool {
     pass.delete_text_files && is_text_file_path(path)
 }
 
+/// Where the local manifest cache lives for a given update server -
+/// namespaced by hostname so switching servers doesn't reuse a stale cache.
 fn local_manifest_path(output_dir: &Path, remote_url: &Url) -> PathBuf {
     output_dir
         .join("updater")
@@ -75,6 +81,8 @@ fn local_manifest_path(output_dir: &Path, remote_url: &Url) -> PathBuf {
         .join("local_manifest.json")
 }
 
+/// Derives the local manifest that should be saved after a successful sync,
+/// from the remote manifest just synced against.
 fn build_local_manifest(remote_manifest: &RemoteManifest) -> LocalManifest {
     let mut local_manifest = LocalManifest {
         version: LOCAL_MANIFEST_VERSION,
@@ -90,6 +98,8 @@ fn build_local_manifest(remote_manifest: &RemoteManifest) -> LocalManifest {
     local_manifest
 }
 
+/// Every file in the remote manifest, unconditionally - used for a full
+/// verify pass, which ignores the local cache entirely.
 fn build_full_file_list(remote_manifest: &RemoteManifest) -> Vec<FileToDownload> {
     remote_manifest
         .files
@@ -101,6 +111,8 @@ fn build_full_file_list(remote_manifest: &RemoteManifest) -> Vec<FileToDownload>
         .collect()
 }
 
+/// Diffs the remote manifest against the local one, returning only files
+/// that are missing locally or whose hash no longer matches.
 async fn get_files_to_update(
     remote_manifest: &RemoteManifest,
     local_manifest: &LocalManifest,
@@ -126,6 +138,12 @@ async fn get_files_to_update(
         .collect()
 }
 
+/// Clones/repairs every file in `files_to_update` against its remote
+/// archive: opens a reader per file, scans what each local file already has,
+/// reorders each file in place, streams down only the missing chunks, then
+/// truncates any file left larger than its remote source. Reports progress
+/// through `pass`'s scan/transfer stages. Returns how many files needed any
+/// chunks downloaded at all.
 async fn get_remote_files(
     base_url: &Url,
     files_to_update: &[FileToDownload],
@@ -273,6 +291,7 @@ fn parse_remote_url(url: &str) -> anyhow::Result<Url> {
 /// ("Verify Files") always bypasses this - it's a deliberate manual check.
 const RECHECK_THROTTLE: std::time::Duration = std::time::Duration::from_secs(15 * 60);
 
+/// Whether `local_manifest_path` was modified within `RECHECK_THROTTLE`.
 async fn is_recently_synced(local_manifest_path: &Path) -> bool {
     let Ok(metadata) = tokio::fs::metadata(local_manifest_path).await else {
         return false;

@@ -1,3 +1,5 @@
+/** react-error-boundary fallback for any uncaught error in the app tree. */
+
 import { relaunch } from "@tauri-apps/plugin-process";
 import { Button } from "@/components/ui/button";
 import {
@@ -7,6 +9,7 @@ import {
   ErrorView,
 } from "@/features/errors/error-base";
 
+/** Generic "something broke" screen with a relaunch action. */
 export default function AppErrorPage() {
   return (
     <ErrorView>

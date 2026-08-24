@@ -1,3 +1,5 @@
+/** The Home screen's News panel. */
+
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { LoaderCircle, RefreshCw, SquareArrowOutUpRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -91,6 +93,7 @@ const CATEGORY_COLOR_CLASS: Record<string, string> = {
 };
 const DEFAULT_CATEGORY_COLOR_CLASS = "text-primary";
 
+/** One article as a clickable card, opening the article's link on click. */
 function NewsCard({ item }: { item: NewsItem }) {
   const categoryColor =
     CATEGORY_COLOR_CLASS[item.category] ?? DEFAULT_CATEGORY_COLOR_CLASS;

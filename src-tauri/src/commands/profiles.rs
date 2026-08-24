@@ -19,6 +19,8 @@ use crate::state::AppState;
 const PROFILES_CHANGED_EVENT: &str = "profiles-changed";
 const EXPORT_BUNDLE_VERSION: u8 = 1;
 
+/// Broadcasts that the profile list changed, so every open `useProfiles()`
+/// subscriber refetches without polling.
 fn notify_changed(app: &AppHandle) {
     // Best-effort: a failed emit (e.g. no listeners yet) shouldn't fail the command
     // that already succeeded against the database.
@@ -35,6 +37,7 @@ pub fn profiles_read_export_file(path: String) -> AppResult<String> {
     std::fs::read_to_string(&path).map_err(Into::into)
 }
 
+/// Lists every saved profile (without passwords) in display order.
 #[tauri::command]
 pub fn profiles_list(state: State<AppState>) -> AppResult<Vec<Profile>> {
     state.require_unlocked()?;
@@ -42,6 +45,7 @@ pub fn profiles_list(state: State<AppState>) -> AppResult<Vec<Profile>> {
     profiles::list(&conn)
 }
 
+/// Encrypts the given password under the vault key and saves a new profile.
 #[tauri::command]
 pub fn profiles_create(
     input: NewProfileInput,
@@ -60,6 +64,8 @@ pub fn profiles_create(
     Ok(profile)
 }
 
+/// Updates a profile's name/email/password - any field left `None` in
+/// `input` is left unchanged, including the password.
 #[tauri::command]
 pub fn profiles_update(
     email: String,
@@ -90,6 +96,7 @@ pub fn profiles_update(
     Ok(profile)
 }
 
+/// Permanently deletes a saved profile.
 #[tauri::command]
 pub fn profiles_delete(email: String, state: State<AppState>, app: AppHandle) -> AppResult<()> {
     state.require_unlocked()?;
@@ -101,6 +108,8 @@ pub fn profiles_delete(email: String, state: State<AppState>, app: AppHandle) ->
     Ok(())
 }
 
+/// Persists a new display order, given the full list of emails in their
+/// desired order (drag-and-drop reorder on the Profiles page).
 #[tauri::command]
 pub fn profiles_reorder(
     ordered_emails: Vec<String>,
@@ -116,6 +125,9 @@ pub fn profiles_reorder(
     Ok(())
 }
 
+/// Decrypts the selected profiles' passwords with the vault key, then
+/// re-encrypts the whole bundle under a separate export password - see
+/// `ExportBundle`'s doc comment for why it's not the vault passphrase.
 #[tauri::command]
 pub fn profiles_export(
     emails: Vec<String>,
@@ -169,6 +181,10 @@ pub fn profiles_write_export_file(bundle: ExportBundle, path: String) -> AppResu
     std::fs::write(&path, json).map_err(Into::into)
 }
 
+/// Decrypts an `ExportBundle` with the given export password and inserts
+/// every entry whose email isn't already saved locally, re-encrypting each
+/// password under this vault's own key. Entries with a colliding email are
+/// skipped, never overwritten.
 #[tauri::command]
 pub fn profiles_import(
     bundle: ExportBundle,

@@ -1,3 +1,5 @@
+/** Confirmation dialog gating every profile delete. */
+
 import { LoaderCircle } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";

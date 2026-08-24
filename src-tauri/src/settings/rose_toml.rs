@@ -36,6 +36,8 @@ pub fn rose_toml_path() -> Option<PathBuf> {
     )
 }
 
+/// Non-Windows counterpart to the `#[cfg(windows)]` version above - see its
+/// doc comment.
 #[cfg(not(windows))]
 pub fn rose_toml_path() -> Option<PathBuf> {
     let appdata = super::wine_prefix::appdata_roaming_dir()?;

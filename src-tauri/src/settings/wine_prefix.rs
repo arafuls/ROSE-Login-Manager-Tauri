@@ -20,6 +20,7 @@ const RELATIVE_CANDIDATES: [&str; 2] = [
     "Program Files (x86)/ROSE Online",
 ];
 
+/// Wine prefixes worth checking: `$WINEPREFIX` if set, then the default `~/.wine`.
 fn candidate_prefixes() -> Vec<PathBuf> {
     let mut prefixes = Vec::new();
     if let Ok(wineprefix) = env::var("WINEPREFIX") {
@@ -31,6 +32,7 @@ fn candidate_prefixes() -> Vec<PathBuf> {
     prefixes
 }
 
+/// Looks for `trose.exe` under either candidate prefix's usual install path.
 pub fn find_game_folder() -> Option<String> {
     candidate_prefixes().into_iter().find_map(|prefix| {
         let drive_c = prefix.join("drive_c");

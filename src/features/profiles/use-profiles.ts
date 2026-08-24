@@ -1,7 +1,10 @@
+/** Live list of saved profiles, refetching automatically on any `profiles-changed` event. */
+
 import { useCallback, useEffect, useState } from "react";
 import { onProfilesChanged, profilesList } from "./api";
 import type { Profile } from "./types";
 
+/** The `useProfiles` hook - see the file header. */
 export function useProfiles() {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);

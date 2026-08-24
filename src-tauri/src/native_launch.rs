@@ -22,6 +22,8 @@ use tauri_plugin_shell::ShellExt;
 
 use crate::error::AppResult;
 
+/// Builds the command to launch the native Linux `trose` binary, first
+/// making sure it (and its `crashpad_handler` sidecar) are actually executable.
 pub fn build_launch_command(app: &AppHandle, exe_path: &Path) -> AppResult<ShellCommand> {
     ensure_executable(exe_path)?;
 
@@ -41,6 +43,7 @@ pub fn build_launch_command(app: &AppHandle, exe_path: &Path) -> AppResult<Shell
     Ok(cmd)
 }
 
+/// Adds the execute bit to `path` if it isn't already set.
 fn ensure_executable(path: &Path) -> AppResult<()> {
     use std::os::unix::fs::PermissionsExt;
 

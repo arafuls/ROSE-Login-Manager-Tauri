@@ -1,3 +1,5 @@
+/** Drag-and-drop reorder logic shared by every profile list in the app. */
+
 import {
   closestCenter,
   type DragEndEvent,

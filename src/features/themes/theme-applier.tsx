@@ -1,3 +1,5 @@
+/** Applies the active theme's colors app-wide via CSS custom properties. */
+
 import { useEffect } from "react";
 import { useSettings } from "@/features/settings/use-settings";
 import { ROSE_DEFAULT_THEME_ID, type ThemeColors } from "./types";

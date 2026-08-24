@@ -28,10 +28,12 @@ function toVaultError(error: unknown): VaultError {
   return new VaultError("unknown");
 }
 
+/** Whether `vaultSetup` has ever run. */
 export function vaultIsInitialized(): Promise<boolean> {
   return invoke("vault_is_initialized");
 }
 
+/** First-run setup: generates and wraps the DEK, returning the one-time recovery key. */
 export async function vaultSetup(
   passphrase: string
 ): Promise<VaultSetupResult> {
@@ -42,6 +44,7 @@ export async function vaultSetup(
   }
 }
 
+/** Unlocks the vault with its passphrase. */
 export async function vaultUnlock(passphrase: string): Promise<void> {
   try {
     await invoke("vault_unlock", { passphrase });
@@ -50,6 +53,7 @@ export async function vaultUnlock(passphrase: string): Promise<void> {
   }
 }
 
+/** Unlocks with the recovery key and sets a new passphrase in the same step. */
 export async function vaultRecover(
   recoveryKey: string,
   newPassphrase: string
@@ -61,6 +65,7 @@ export async function vaultRecover(
   }
 }
 
+/** Rotates the passphrase while it's still known - doesn't need the recovery key. */
 export async function vaultChangePassphrase(
   currentPassphrase: string,
   newPassphrase: string
@@ -75,14 +80,17 @@ export async function vaultChangePassphrase(
   }
 }
 
+/** Last resort when both the passphrase and recovery key are lost: wipes the vault. */
 export async function vaultReset(): Promise<void> {
   await invoke("vault_reset");
 }
 
+/** Whether this session currently has the vault unlocked. */
 export function vaultIsUnlocked(): Promise<boolean> {
   return invoke("vault_is_unlocked");
 }
 
+/** Re-locks the vault for this session. */
 export async function vaultLock(): Promise<void> {
   await invoke("vault_lock");
 }

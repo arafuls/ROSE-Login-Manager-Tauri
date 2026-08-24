@@ -1,3 +1,5 @@
+/** Dialog for exporting selected profiles as a password-protected bundle. */
+
 import { zodResolver } from "@hookform/resolvers/zod";
 import { save } from "@tauri-apps/plugin-dialog";
 import { LoaderCircle } from "lucide-react";
@@ -48,6 +50,7 @@ interface ExportDialogProps {
   settings: Settings | null;
 }
 
+/** Renders the dialog described in the file header. */
 export function ExportDialog({
   open,
   onOpenChange,

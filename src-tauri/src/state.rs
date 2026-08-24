@@ -10,6 +10,8 @@ use rusqlite::Connection;
 use crate::crypto::VaultKey;
 use crate::error::{AppError, AppResult};
 
+/// Everything Tauri manages as shared app state, accessible from any
+/// `#[tauri::command]` via `State<AppState>`.
 pub struct AppState {
     pub db: Mutex<Connection>,
     /// `Some(key)` while the vault is unlocked for this session; `None` otherwise.

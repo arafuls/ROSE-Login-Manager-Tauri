@@ -7,6 +7,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
 import type { Settings, SettingsPatch } from "./types";
 
+/** Reads current settings, applying first-run defaults server-side if needed. */
 export function settingsGet(): Promise<Settings> {
   return invoke("settings_get");
 }
@@ -27,6 +28,7 @@ export function onSettingsChanged(listener: Listener): () => void {
   return () => listeners.delete(listener);
 }
 
+/** Merges `patch` onto current settings, persists it, and notifies `onSettingsChanged` listeners. */
 export async function settingsUpdate(patch: SettingsPatch): Promise<Settings> {
   const next = await invoke<Settings>("settings_update", { patch });
   for (const listener of listeners) {

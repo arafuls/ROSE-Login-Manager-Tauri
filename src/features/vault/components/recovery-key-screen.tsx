@@ -1,3 +1,5 @@
+/** The one-time, post-setup recovery-key display screen. */
+
 import { Check, Copy, ShieldAlert } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";

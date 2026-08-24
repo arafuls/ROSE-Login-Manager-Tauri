@@ -1,3 +1,5 @@
+/** The "/profiles" route's screen: full profile management (add/edit/delete/reorder/export/import). */
+
 import { DndContext } from "@dnd-kit/core";
 import {
   SortableContext,
@@ -19,6 +21,7 @@ import { ImportDialog } from "./import-dialog";
 import { ProfileCard } from "./profile-card";
 import { ProfileFormDialog } from "./profile-form-dialog";
 
+/** Renders the screen described in the file header. */
 export function ProfileList() {
   const { profiles, loading, refetch } = useProfiles();
   const { settings } = useSettings();

@@ -6,14 +6,16 @@
 //! recovery key shown to the user at setup. Either can be decrypted to
 //! recover the same DEK, which is how `vault_unlock` and `vault_recover` both
 //! work without knowing about each other. A decrypt failure (AES-GCM
-//! authentication failure) is how a wrong passphrase/recovery key is detected
-//! - there's no separate "verifier" needed, unwrapping successfully *is* the
-//! proof the key was right.
+//! authentication failure) is how a wrong passphrase/recovery key is
+//! detected: there's no separate "verifier" needed, unwrapping successfully
+//! *is* the proof the key was right.
 
 use rusqlite::{Connection, OptionalExtension};
 
 use crate::error::AppResult;
 
+/// The single persisted `vault_meta` row - see the file header for what
+/// each wrapping is and why there are two.
 pub struct VaultMeta {
     pub passphrase_salt: Vec<u8>,
     pub wrapped_dek_by_passphrase: Vec<u8>,
@@ -21,11 +23,13 @@ pub struct VaultMeta {
     pub wrapped_dek_by_recovery: Vec<u8>,
 }
 
+/// Whether `vault_setup` has ever run - the row simply exists or doesn't.
 pub fn is_initialized(conn: &Connection) -> AppResult<bool> {
     let count: i64 = conn.query_row("SELECT COUNT(*) FROM vault_meta", [], |row| row.get(0))?;
     Ok(count > 0)
 }
 
+/// Loads the vault_meta row, if the vault has been set up.
 pub fn load(conn: &Connection) -> AppResult<Option<VaultMeta>> {
     conn.query_row(
         "SELECT passphrase_salt, wrapped_dek_by_passphrase, recovery_salt, wrapped_dek_by_recovery
@@ -44,6 +48,7 @@ pub fn load(conn: &Connection) -> AppResult<Option<VaultMeta>> {
     .map_err(Into::into)
 }
 
+/// Writes the (only ever one) `vault_meta` row - called once, by `vault_setup`.
 pub fn insert(conn: &Connection, meta: &VaultMeta) -> AppResult<()> {
     conn.execute(
         "INSERT INTO vault_meta

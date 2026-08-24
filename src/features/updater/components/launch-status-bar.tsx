@@ -1,3 +1,5 @@
+/** The Home screen's live launch/sync/verify progress bar. */
+
 import { useEffect, useState } from "react";
 import { onLaunchStatusChanged } from "@/features/updater/api";
 import type { LaunchStatus } from "@/features/updater/types";

@@ -27,6 +27,7 @@ pub struct Profile {
     pub order: i64,
 }
 
+/// `profiles_add`'s payload for creating a new saved login.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct NewProfileInput {
@@ -36,6 +37,7 @@ pub struct NewProfileInput {
     pub password: String,
 }
 
+/// `profiles_update`'s payload - every field optional, missing ones left unchanged.
 #[derive(Debug, Clone, Default, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateProfileInput {
@@ -48,6 +50,8 @@ pub struct UpdateProfileInput {
     pub password: Option<String>,
 }
 
+/// The default login scene shown after signing in - mirrors ROSE's own
+/// `rose.toml` `[game] title_map_id` values (see `title_map_id` below).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum LoginScreen {
     Random,
@@ -112,6 +116,8 @@ impl Default for NavStyle {
     }
 }
 
+/// The full persisted app settings shape (`settings.toml`), returned by
+/// `settings_get` and updated in place via `SettingsPatch`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Settings {
@@ -144,6 +150,8 @@ pub struct Settings {
     pub active_theme_id: String,
 }
 
+/// Fallback for `Settings::active_theme_id` - see that field's own doc
+/// comment for why a dedicated default function is needed here.
 fn default_active_theme_id() -> String {
     crate::theme::ROSE_DEFAULT_THEME_ID.to_string()
 }
@@ -164,12 +172,11 @@ impl Default for Settings {
     }
 }
 
-/// `Partial<Settings>` at the invoke() boundary: every field optional, missing fields
-/// mean "leave unchanged".
-/// Distinguishes "key absent" (`None`, leave unchanged) from "key present with value
-/// `null`" (`Some(None)`, explicitly clear) for a nullable `Option<String>` field -
-/// the classic serde "double option" problem. `#[serde(default, deserialize_with =
-/// ...)]` only invokes this when the JSON key is actually present.
+/// Deserializes an `Option<String>` field as `Some(value)` whenever the JSON
+/// key is present at all, distinguishing "key absent" (leave unchanged) from
+/// "key present with value `null`" (explicitly clear) for a nullable field -
+/// the classic serde "double option" problem. Only invoked by fields using
+/// `#[serde(default, deserialize_with = "double_option")]`.
 fn double_option<'de, D>(de: D) -> Result<Option<Option<String>>, D::Error>
 where
     D: Deserializer<'de>,
@@ -177,6 +184,8 @@ where
     Option::<String>::deserialize(de).map(Some)
 }
 
+/// `Partial<Settings>` at the invoke() boundary - every field optional,
+/// missing ones mean "leave unchanged".
 #[derive(Debug, Clone, Default, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SettingsPatch {
@@ -202,6 +211,9 @@ pub struct SettingsPatch {
     pub active_theme_id: Option<String>,
 }
 
+/// Returned by `profiles_export` - a password-protected snapshot of
+/// selected profiles, portable between machines independent of the vault's
+/// own passphrase.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ExportBundle {
@@ -210,6 +222,7 @@ pub struct ExportBundle {
     pub ciphertext: String,
 }
 
+/// Returned by `profiles_import` after processing an `ExportBundle`.
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ImportResult {
@@ -301,18 +314,22 @@ pub struct ThemeColors {
 // avatar_background/avatar_foreground existed - match rose_default_colors'
 // muted/muted_foreground (see theme/mod.rs), which is what these fields
 // replaced, so an old theme's look doesn't change on load.
+/// Default for `ThemeColors::nav_foreground`.
 fn default_nav_foreground() -> String {
     "#9cabb9".to_string()
 }
 
+/// Default for `ThemeColors::avatar_background`.
 fn default_avatar_background() -> String {
     "#16283a".to_string()
 }
 
+/// Default for `ThemeColors::avatar_foreground`.
 fn default_avatar_foreground() -> String {
     "#9cabb9".to_string()
 }
 
+/// A saved (or built-in) color theme, as returned by `theme_list`/`theme_get`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Theme {

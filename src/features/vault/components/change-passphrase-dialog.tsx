@@ -1,3 +1,5 @@
+/** Settings' "Change passphrase" dialog - rotates the passphrase without touching saved profiles or the recovery key. */
+
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff, LoaderCircle } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -45,6 +47,7 @@ interface ChangePassphraseDialogProps {
   open: boolean;
 }
 
+/** Renders the dialog described in the file header. */
 export function ChangePassphraseDialog({
   open,
   onOpenChange,

@@ -1,3 +1,7 @@
+//! App entry point: registers Tauri plugins, opens the database and clears
+//! stale profile-running statuses left over from a previous session, sets
+//! up `AppState`, and registers every `#[tauri::command]` handler.
+
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 

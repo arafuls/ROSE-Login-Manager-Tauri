@@ -50,6 +50,8 @@ const LOGIN_SERVER: &str = "connect.roseonlinegame.com";
 const DEFAULT_UPDATE_URL: &str = "https://updates2.roseonlinegame.com";
 const MANIFEST_NAME: &str = "manifest.json";
 
+/// Payload for the `client-launch-status` event, emitted throughout a
+/// sync/launch so the frontend can show live progress instead of a blocking spinner.
 #[derive(Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 struct LaunchStatus {
@@ -62,6 +64,7 @@ struct LaunchStatus {
     max: Option<u64>,
 }
 
+/// Emits the current `LaunchStatus` as a `client-launch-status` event.
 fn emit_status(app: &AppHandle, context: &'static str, running: bool, progress: &ProgressState) {
     let _ = app.emit(
         LAUNCH_STATUS_EVENT,
@@ -146,6 +149,9 @@ fn spawn_trose(
         .map_err(|e| AppError::Internal(format!("failed to launch game client: {e}")))
 }
 
+/// The main "one click" flow: sync game files if needed, decrypt the saved
+/// password, spawn the client logged into this profile, then watch the
+/// child process so the profile's running-status flips back off on exit.
 #[tauri::command]
 pub async fn profiles_launch(
     email: String,

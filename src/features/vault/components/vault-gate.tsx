@@ -1,3 +1,5 @@
+/** Gates the whole app behind vault status - see the VaultGate component below. */
+
 import { LoaderCircle } from "lucide-react";
 import type { ReactNode } from "react";
 import { useVault } from "@/features/vault/vault-provider";

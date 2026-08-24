@@ -1,3 +1,5 @@
+/** One profile row in the Home screen's quick-launch list. */
+
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { GripVertical, LoaderCircle, UserRound } from "lucide-react";

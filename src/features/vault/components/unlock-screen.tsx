@@ -1,3 +1,5 @@
+/** The locked-vault screen: unlock with a passphrase, or switch to recovery-key mode. */
+
 import { zodResolver } from "@hookform/resolvers/zod";
 import { KeyRound, LoaderCircle } from "lucide-react";
 import { useState } from "react";
@@ -43,6 +45,7 @@ const recoverSchema = z
   });
 type RecoverFormValues = z.infer<typeof recoverSchema>;
 
+/** Switches between the unlock form and the recovery form described in the file header. */
 export function UnlockScreen() {
   const [mode, setMode] = useState<"unlock" | "recover">("unlock");
   const [resetOpen, setResetOpen] = useState(false);
@@ -64,6 +67,7 @@ export function UnlockScreen() {
   );
 }
 
+/** The passphrase-unlock form. */
 function UnlockForm({
   onForgotPassphrase,
 }: {
@@ -151,6 +155,7 @@ function UnlockForm({
   );
 }
 
+/** The recovery-key + new-passphrase form. */
 function RecoverForm({
   onBack,
   onLostRecoveryKey,

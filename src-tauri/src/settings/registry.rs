@@ -18,6 +18,7 @@ const UNINSTALL_SUBKEY: &str =
 #[cfg(windows)]
 const VALUE_NAME: &str = "InstallLocation";
 
+/// Checks HKLM then HKCU for the game's uninstall-key `InstallLocation`.
 #[cfg(windows)]
 pub fn find_game_folder() -> Option<String> {
     use winreg::enums::{HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE};

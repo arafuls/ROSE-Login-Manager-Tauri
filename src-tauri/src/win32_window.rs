@@ -19,6 +19,8 @@ const MAX_POLL_ATTEMPTS: u32 = 50;
 #[cfg(windows)]
 const POLL_INTERVAL: Duration = Duration::from_millis(100);
 
+/// Polls for `child_pid`'s visible top-level window, then positions it
+/// directly behind this app's own window - see the file header for why.
 #[cfg(windows)]
 pub fn move_behind_main_window(app: &AppHandle, child_pid: u32) {
     use windows::core::BOOL;
@@ -33,6 +35,8 @@ pub fn move_behind_main_window(app: &AppHandle, child_pid: u32) {
         found: Option<isize>,
     }
 
+    /// `EnumWindows` callback: records `hwnd` in `SearchState` and stops
+    /// enumeration as soon as a visible window owned by `target_pid` is found.
     unsafe extern "system" fn enum_windows_proc(hwnd: HWND, lparam: LPARAM) -> BOOL {
         let state = unsafe { &mut *(lparam.0 as *mut SearchState) };
         let mut window_pid = 0u32;

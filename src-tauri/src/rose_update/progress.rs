@@ -8,6 +8,7 @@
 use std::sync::atomic::{self, AtomicU64};
 use std::sync::Arc;
 
+/// Which phase of a sync/verify a `ProgressState` is currently in.
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[repr(usize)]
 pub enum ProgressStage {
@@ -49,6 +50,10 @@ impl ProgressStage {
     }
 }
 
+/// Shared, atomically-updated sync/verify progress - cheap to `Clone`
+/// (every clone shares the same underlying counters via `Arc`), so a copy
+/// can be handed to both the async work and the ticker task that polls it
+/// (see `run_with_progress` in `commands/process.rs`).
 #[derive(Clone)]
 pub struct ProgressState {
     current_progress: Arc<AtomicU64>,

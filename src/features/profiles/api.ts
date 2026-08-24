@@ -59,10 +59,12 @@ export function onProfilesChanged(listener: () => void): () => void {
   };
 }
 
+/** Lists every saved profile (without passwords) in display order. */
 export function profilesList(): Promise<Profile[]> {
   return invoke("profiles_list");
 }
 
+/** Encrypts the given password under the vault key and saves a new profile. */
 export async function profilesCreate(input: NewProfileInput): Promise<Profile> {
   try {
     return await invoke("profiles_create", { input });
@@ -71,6 +73,7 @@ export async function profilesCreate(input: NewProfileInput): Promise<Profile> {
   }
 }
 
+/** Updates a profile - any field left unset in `input` stays unchanged, including the password. */
 export async function profilesUpdate(
   email: string,
   input: UpdateProfileInput
@@ -82,6 +85,7 @@ export async function profilesUpdate(
   }
 }
 
+/** Permanently deletes a saved profile. */
 export async function profilesDelete(email: string): Promise<void> {
   try {
     await invoke("profiles_delete", { email });
@@ -90,6 +94,7 @@ export async function profilesDelete(email: string): Promise<void> {
   }
 }
 
+/** Persists a new display order (drag-and-drop reorder). */
 export async function profilesReorder(orderedEmails: string[]): Promise<void> {
   try {
     await invoke("profiles_reorder", { orderedEmails });
@@ -98,6 +103,7 @@ export async function profilesReorder(orderedEmails: string[]): Promise<void> {
   }
 }
 
+/** Syncs game files if needed, then launches the client logged into this profile. */
 export async function profilesLaunch(email: string): Promise<void> {
   try {
     await invoke("profiles_launch", { email });
@@ -106,6 +112,7 @@ export async function profilesLaunch(email: string): Promise<void> {
   }
 }
 
+/** Builds a password-protected export bundle for the selected profiles. */
 export async function profilesExport(
   emails: string[],
   exportPassword: string
@@ -117,10 +124,12 @@ export async function profilesExport(
   }
 }
 
+/** Reads a file the user picked via the native open dialog, for import. */
 export function profilesReadExportFile(path: string): Promise<string> {
   return invoke("profiles_read_export_file", { path });
 }
 
+/** Writes an export bundle to a path the user picked via the native save dialog. */
 export function profilesWriteExportFile(
   bundle: ExportBundle,
   path: string
@@ -128,6 +137,7 @@ export function profilesWriteExportFile(
   return invoke("profiles_write_export_file", { bundle, path });
 }
 
+/** Decrypts `bundle` and imports every entry whose email isn't already saved locally. */
 export async function profilesImport(
   bundle: ExportBundle,
   exportPassword: string

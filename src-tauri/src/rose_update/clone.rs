@@ -46,6 +46,7 @@ fn cpu_semaphore() -> &'static Semaphore {
     })
 }
 
+/// Opens an HTTP-backed reader over the remote bitar archive at `url`.
 pub async fn init_remote_archive_reader(url: reqwest::Url) -> anyhow::Result<RemoteArchiveReader> {
     let client = reqwest::ClientBuilder::new()
         .brotli(true)
@@ -61,6 +62,8 @@ pub async fn init_remote_archive_reader(url: reqwest::Url) -> anyhow::Result<Rem
     Ok(archive)
 }
 
+/// Estimates how many chunks the local file will scan into, for progress
+/// bar sizing before the actual scan runs. Returns 0 if the file doesn't exist yet.
 pub async fn estimate_local_chunk_count(
     archive_reader: &RemoteArchiveReader,
     local_file_path: &Path,
@@ -91,6 +94,8 @@ pub async fn estimate_local_chunk_count(
     Ok(local_chunk_count)
 }
 
+/// Scans the local file into a `ChunkIndex` of the chunks it already
+/// contains, so `clone_remote_file` only has to download what's missing.
 pub async fn build_local_chunk_index(
     archive_reader: &RemoteArchiveReader,
     local_file_path: &Path,
@@ -148,6 +153,9 @@ pub async fn build_local_chunk_index(
     Ok(chunk_index)
 }
 
+/// Opens (creating if needed) the local file and reorders its existing
+/// chunks in place to prepare it as a `CloneOutput` ready to receive
+/// whatever chunks `clone_remote_file` streams in next.
 pub async fn init_local_clone_output(
     archive_reader: &RemoteArchiveReader,
     local_file_path: &Path,
@@ -181,6 +189,8 @@ pub async fn init_local_clone_output(
     Ok(clone_output)
 }
 
+/// Streams, decompresses, verifies, and writes every chunk `clone_output`
+/// is still missing, completing the local file to match the remote archive.
 pub async fn clone_remote_file(
     archive_reader: &mut RemoteArchiveReader,
     clone_output: &mut bitar::CloneOutput<tokio::fs::File>,

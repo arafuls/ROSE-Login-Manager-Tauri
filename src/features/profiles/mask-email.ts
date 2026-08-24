@@ -1,3 +1,5 @@
+/** Respects the displayEmail/maskEmail settings wherever a profile's email is shown. */
+
 import type { Settings } from "@/features/settings/types";
 
 /**

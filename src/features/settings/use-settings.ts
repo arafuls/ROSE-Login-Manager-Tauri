@@ -1,3 +1,9 @@
+/**
+ * The `useSettings` hook - a live, auto-updating read of the app's
+ * persisted settings, for any component that needs to display or react to
+ * them without owning the fetch/subscription logic itself.
+ */
+
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { isBackendError } from "@/lib/tauri-errors";

@@ -1,3 +1,5 @@
+/** The catch-all "*" route, shown for any unmatched path. */
+
 import { useNavigate } from "react-router";
 import { Button } from "@/components/ui/button";
 import {
@@ -7,6 +9,7 @@ import {
   ErrorView,
 } from "@/features/errors/error-base";
 
+/** Generic 404 page with a "Go back" action. */
 export default function NotFoundErrorPage() {
   const navigate = useNavigate();
   return (

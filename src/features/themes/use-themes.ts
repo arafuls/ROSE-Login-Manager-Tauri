@@ -1,7 +1,10 @@
+/** Live list of themes, refetching automatically after any save/delete/import from any instance. */
+
 import { useCallback, useEffect, useState } from "react";
 import { onThemesChanged, themeList } from "./api";
 import type { Theme } from "./types";
 
+/** The `useThemes` hook - see the file header. */
 export function useThemes() {
   const [themes, setThemes] = useState<Theme[]>([]);
   const [loading, setLoading] = useState(true);

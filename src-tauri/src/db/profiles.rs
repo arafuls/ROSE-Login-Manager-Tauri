@@ -19,6 +19,7 @@ fn row_to_profile(row: &rusqlite::Row) -> rusqlite::Result<Profile> {
     })
 }
 
+/// Lists every profile in display order.
 pub fn list(conn: &Connection) -> AppResult<Vec<Profile>> {
     let mut stmt = conn.prepare(
         "SELECT email, name, status, password, profile_order FROM profiles ORDER BY profile_order ASC",
@@ -31,6 +32,7 @@ pub fn list(conn: &Connection) -> AppResult<Vec<Profile>> {
     Ok(out)
 }
 
+/// Case-insensitive email existence check (matches the column's `COLLATE NOCASE`).
 pub fn email_exists(conn: &Connection, email: &str) -> AppResult<bool> {
     let count: i64 = conn.query_row(
         "SELECT COUNT(*) FROM profiles WHERE email = ?1",
@@ -133,6 +135,7 @@ pub fn update(
     })
 }
 
+/// Permanently deletes a profile by email.
 pub fn delete(conn: &Connection, email: &str) -> AppResult<()> {
     conn.execute("DELETE FROM profiles WHERE email = ?1", [email])?;
     Ok(())

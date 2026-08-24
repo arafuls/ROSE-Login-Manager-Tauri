@@ -1,3 +1,5 @@
+/** The collapsible icon sidebar, one of the two selectable nav styles (see app-topbar.tsx). */
+
 import { House, LogOut, Settings as SettingsIcon, Users } from "lucide-react";
 import type { ComponentType } from "react";
 import { Link, useLocation } from "react-router";

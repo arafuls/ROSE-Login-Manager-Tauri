@@ -25,6 +25,7 @@ export const NAV_STYLE_OPTIONS = ["Sidebar", "Topbar"] as const;
 
 export type NavStyle = (typeof NAV_STYLE_OPTIONS)[number];
 
+/** The full persisted app settings shape, as returned by `settingsGet`. */
 export interface Settings {
   activeThemeId: string;
   displayEmail: boolean;

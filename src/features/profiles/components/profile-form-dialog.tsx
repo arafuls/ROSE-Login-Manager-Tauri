@@ -1,3 +1,5 @@
+/** Combined add/edit dialog for a single profile - the mode is inferred from whether `profile` is passed. */
+
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff, LoaderCircle } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -62,6 +64,7 @@ interface ProfileFormDialogProps {
   profile?: Profile;
 }
 
+/** Renders the dialog described in the file header. */
 export function ProfileFormDialog({
   open,
   onOpenChange,

@@ -35,11 +35,15 @@ const MONTH_NAMES: [&str; 12] = [
     "December",
 ];
 
+/// The API's top-level envelope - only `data` is used, pagination fields
+/// (`links`/`meta`) are ignored since the news panel shows one page.
 #[derive(Debug, Deserialize)]
 struct NewsApiResponse {
     data: Vec<ApiNewsItem>,
 }
 
+/// One article as the API returns it - see the file header for how these
+/// fields map onto [`NewsItem`].
 #[derive(Debug, Deserialize)]
 struct ApiNewsItem {
     title: String,
@@ -50,11 +54,13 @@ struct ApiNewsItem {
     link: String,
 }
 
+/// Just the field this app actually uses from the API's richer category object.
 #[derive(Debug, Deserialize)]
 struct ApiCategory {
     title: String,
 }
 
+/// Fetches and maps the latest news articles for the Home screen's news panel.
 #[tauri::command]
 pub async fn news_fetch() -> AppResult<Vec<NewsItem>> {
     let response: NewsApiResponse = reqwest::get(NEWS_API_URL)
@@ -67,6 +73,7 @@ pub async fn news_fetch() -> AppResult<Vec<NewsItem>> {
     Ok(response.data.into_iter().map(map_news_item).collect())
 }
 
+/// Converts one API article into this app's own `NewsItem` shape.
 fn map_news_item(item: ApiNewsItem) -> NewsItem {
     NewsItem {
         title: item.title,
@@ -93,6 +100,8 @@ fn collapse_whitespace(text: &str) -> String {
     text.split_whitespace().collect::<Vec<_>>().join(" ")
 }
 
+/// Collapses whitespace, then truncates to [`EXCERPT_MAX_CHARS`] with an
+/// ellipsis if needed.
 fn truncate_excerpt(text: &str) -> String {
     let plain = collapse_whitespace(text);
     let char_count = plain.chars().count();

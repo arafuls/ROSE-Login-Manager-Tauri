@@ -1,3 +1,5 @@
+/** The create/edit form for a custom color theme, with a live per-group preview. */
+
 import { zodResolver } from "@hookform/resolvers/zod";
 import { LoaderCircle, UserRound } from "lucide-react";
 import { useEffect } from "react";

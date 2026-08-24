@@ -19,12 +19,18 @@ use crate::error::{AppError, AppResult};
 use crate::models::VaultSetupResult;
 use crate::state::AppState;
 
+/// Whether `vault_setup` has ever run - drives whether the frontend shows
+/// the first-run setup screen or the unlock screen.
 #[tauri::command]
 pub fn vault_is_initialized(state: State<AppState>) -> AppResult<bool> {
     let conn = state.db.lock().unwrap();
     vault_meta::is_initialized(&conn)
 }
 
+/// First-run only: generates the DEK, wraps it under both the passphrase
+/// and a freshly generated recovery key, persists both wrappings, and
+/// unlocks the vault for this session. Returns the recovery key so the
+/// frontend can show it exactly once (see [`VaultSetupResult`]).
 #[tauri::command]
 pub fn vault_setup(passphrase: String, state: State<AppState>) -> AppResult<VaultSetupResult> {
     let conn = state.db.lock().unwrap();
@@ -61,6 +67,8 @@ pub fn vault_setup(passphrase: String, state: State<AppState>) -> AppResult<Vaul
     Ok(VaultSetupResult { recovery_key })
 }
 
+/// Unlocks with the vault's passphrase, storing the recovered DEK in
+/// session state for `crypto::encrypt`/`decrypt` calls elsewhere to use.
 #[tauri::command]
 pub fn vault_unlock(passphrase: String, state: State<AppState>) -> AppResult<()> {
     let conn = state.db.lock().unwrap();
@@ -154,16 +162,22 @@ pub fn vault_reset(state: State<AppState>) -> AppResult<()> {
     Ok(())
 }
 
+/// Whether this session currently has the DEK in memory (i.e. unlocked).
 #[tauri::command]
 pub fn vault_is_unlocked(state: State<AppState>) -> bool {
     state.vault_key.lock().unwrap().is_some()
 }
 
+/// Drops the in-memory DEK, re-locking the vault for this session without
+/// touching anything persisted on disk.
 #[tauri::command]
 pub fn vault_lock(state: State<AppState>) {
     *state.vault_key.lock().unwrap() = None;
 }
 
+/// Converts a decrypted DEK's raw bytes into the fixed-size array type used
+/// everywhere else, surfacing a clear error instead of a panic if a
+/// corrupted wrapping ever decrypts to the wrong length.
 fn to_vault_key(bytes: Vec<u8>) -> AppResult<crypto::VaultKey> {
     bytes
         .try_into()

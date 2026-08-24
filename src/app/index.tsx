@@ -1,3 +1,9 @@
+/**
+ * App root: mounts the global providers (theme, vault, sidebar context),
+ * the custom titlebar, and the router - everything else in the app renders
+ * beneath this.
+ */
+
 import "./global.css";
 
 import { platform } from "@tauri-apps/plugin-os";
@@ -18,6 +24,7 @@ import { cn } from "@/lib/utils";
 // rounded corners at all.
 const isWindows = platform() === "windows";
 
+/** Top-level component - see the file header. */
 export default function App() {
   return (
     <AppProvider>

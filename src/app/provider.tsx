@@ -1,3 +1,9 @@
+/**
+ * App-wide provider stack - error boundary, tooltips, live theme
+ * application, and the app-update checker - shared by every screen
+ * regardless of vault/router state.
+ */
+
 import { type ReactNode, Suspense } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { Toaster } from "@/components/ui/sonner";
@@ -6,6 +12,7 @@ import { AppUpdateChecker } from "@/features/app-update/use-app-update";
 import AppErrorPage from "@/features/errors/app-error";
 import { ThemeApplier } from "@/features/themes/theme-applier";
 
+/** Wraps `children` in the provider stack described in the file header. */
 export default function AppProvider({ children }: { children: ReactNode }) {
   return (
     <Suspense fallback={<>Loading...</>}>

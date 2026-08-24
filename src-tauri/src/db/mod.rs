@@ -27,6 +27,7 @@ use rusqlite::Connection;
 
 use crate::error::AppResult;
 
+/// Opens (creating if needed) the app's SQLite database and runs migrations.
 pub fn open(db_path: &Path) -> AppResult<Connection> {
     let conn = Connection::open(db_path)?;
     conn.pragma_update(None, "journal_mode", "WAL")?;
@@ -35,6 +36,8 @@ pub fn open(db_path: &Path) -> AppResult<Connection> {
     Ok(conn)
 }
 
+/// Creates the `profiles`/`vault_meta` tables if they don't exist yet, after
+/// first handling the one-time legacy-shape migration below.
 fn migrate(conn: &Connection) -> AppResult<()> {
     migrate_legacy_vault_meta(conn)?;
 
@@ -83,6 +86,7 @@ fn migrate_legacy_vault_meta(conn: &Connection) -> AppResult<()> {
     Ok(())
 }
 
+/// Test-only counterpart to `open` - an in-memory database, migrated the same way.
 #[cfg(test)]
 pub fn open_in_memory() -> AppResult<Connection> {
     let conn = Connection::open_in_memory()?;

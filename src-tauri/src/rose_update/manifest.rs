@@ -11,12 +11,14 @@ use tracing::info;
 
 use super::error::ErrorCode;
 
+/// The manifest as published on the update server.
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
 pub struct RemoteManifest {
     pub version: usize,
     pub files: Vec<RemoteManifestFileEntry>,
 }
 
+/// One file's entry in a `RemoteManifest`.
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
 pub struct RemoteManifestFileEntry {
     pub path: String,
@@ -25,12 +27,15 @@ pub struct RemoteManifestFileEntry {
     pub source_size: usize,
 }
 
+/// The manifest describing what's currently installed locally, persisted
+/// alongside the game files so a later sync knows what it already has.
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
 pub struct LocalManifest {
     pub version: usize,
     pub files: Vec<LocalManifestFileEntry>,
 }
 
+/// One file's entry in a `LocalManifest`.
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
 pub struct LocalManifestFileEntry {
     pub path: String,
@@ -38,6 +43,8 @@ pub struct LocalManifestFileEntry {
     pub size: usize,
 }
 
+/// Reads the local manifest from `path`, or returns an empty one if it
+/// doesn't exist yet or fails to parse.
 pub async fn get_or_create_local_manifest(path: &Path) -> anyhow::Result<LocalManifest> {
     info!("Getting local manifest");
 
@@ -65,6 +72,7 @@ pub async fn get_or_create_local_manifest(path: &Path) -> anyhow::Result<LocalMa
     Ok(local_manifest)
 }
 
+/// Writes the local manifest to disk, creating its parent directory if needed.
 pub async fn save_local_manifest(
     manifest_path: &Path,
     manifest: &LocalManifest,
@@ -89,6 +97,7 @@ pub async fn save_local_manifest(
     Ok(())
 }
 
+/// Fetches and parses `manifest_name` from the update server.
 pub async fn download_remote_manifest(
     remote_url: &Url,
     manifest_name: &str,

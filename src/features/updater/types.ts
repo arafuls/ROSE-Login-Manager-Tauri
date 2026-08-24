@@ -2,6 +2,7 @@
 
 export type LaunchContext = "profile" | "default" | "verify";
 
+/** Live progress for the currently running (or last) launch/sync/verify. */
 export interface LaunchStatus {
   context: LaunchContext;
   current?: number;
@@ -16,6 +17,7 @@ export type UpdaterErrorKind =
   | "already_running"
   | "unknown";
 
+/** Typed error so the UI can distinguish specific launch failures from a generic one. */
 export class UpdaterError extends Error {
   readonly kind: UpdaterErrorKind;
 
@@ -26,6 +28,7 @@ export class UpdaterError extends Error {
   }
 }
 
+/** The generic message shown when an `UpdaterError` is constructed without an explicit one. */
 function defaultMessageFor(kind: UpdaterErrorKind): string {
   switch (kind) {
     case "game_folder_not_set":

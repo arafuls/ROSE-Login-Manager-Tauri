@@ -7,11 +7,15 @@ use crate::models::{Settings, SettingsPatch};
 use crate::settings::{self, registry, rose_toml};
 use crate::state::AppState;
 
+/// Reads current settings, writing fresh defaults to disk first if this is
+/// the very first run.
 #[tauri::command]
 pub fn settings_get(state: State<AppState>) -> AppResult<Settings> {
     settings::load(&state.app_data_dir)
 }
 
+/// Merges `patch` onto the current settings and persists the result, then
+/// best-effort mirrors the relevant fields into the game's own `rose.toml`.
 #[tauri::command]
 pub fn settings_update(patch: SettingsPatch, state: State<AppState>) -> AppResult<Settings> {
     let current = settings::load(&state.app_data_dir)?;
@@ -30,6 +34,8 @@ pub fn settings_update(patch: SettingsPatch, state: State<AppState>) -> AppResul
     Ok(next)
 }
 
+/// Auto-detects the ROSE install folder via the Windows registry, for the
+/// Settings page's "Find automatically" button.
 #[tauri::command]
 pub fn settings_find_game_folder() -> Option<String> {
     registry::find_game_folder()

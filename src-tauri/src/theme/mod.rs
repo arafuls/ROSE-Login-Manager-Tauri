@@ -212,6 +212,8 @@ fn catppuccin_colors() -> ThemeColors {
     }
 }
 
+/// Gruvbox dark, one of the four community palettes - see `dracula_colors`'
+/// doc comment for the shared sourcing/mapping methodology.
 fn gruvbox_colors() -> ThemeColors {
     ThemeColors {
         background: "#282828".to_string(),
@@ -306,6 +308,7 @@ fn load_saved(app_data_dir: &Path) -> AppResult<Vec<Theme>> {
     Ok(themes)
 }
 
+/// Overwrites `themes.json` with the full list of saved (non-built-in) themes.
 fn save_all(app_data_dir: &Path, themes: &[Theme]) -> AppResult<()> {
     fs::create_dir_all(app_data_dir)?;
     let contents = serde_json::to_string_pretty(themes)?;

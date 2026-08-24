@@ -17,6 +17,7 @@ export interface VaultSetupResult {
   recoveryKey: string;
 }
 
+/** Typed error so the UI can distinguish specific vault failures from a generic one. */
 export class VaultError extends Error {
   readonly kind: VaultErrorKind;
 
@@ -27,6 +28,7 @@ export class VaultError extends Error {
   }
 }
 
+/** The generic message shown when a `VaultError` is constructed without an explicit one. */
 function defaultMessageFor(kind: VaultErrorKind): string {
   switch (kind) {
     case "wrong_passphrase":

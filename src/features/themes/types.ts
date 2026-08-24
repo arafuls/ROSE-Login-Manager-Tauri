@@ -1,5 +1,6 @@
 /** Mirrors `src-tauri/src/models.rs`'s `ThemeColors`/`Theme`/`ThemeInput`. */
 
+/** Every themeable color token - see the file header for what this mirrors. */
 export interface ThemeColors {
   accent: string;
   accentForeground: string;
@@ -27,6 +28,7 @@ export interface ThemeColors {
   secondaryForeground: string;
 }
 
+/** A saved (or built-in) color theme, as returned by `themeList`/`themeSave`. */
 export interface Theme {
   builtIn: boolean;
   colors: ThemeColors;
@@ -34,6 +36,7 @@ export interface Theme {
   name: string;
 }
 
+/** `themeSave`'s payload: `id` unset creates a new theme, set updates one in place. */
 export interface ThemeInput {
   colors: ThemeColors;
   id?: string;

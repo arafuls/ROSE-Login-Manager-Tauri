@@ -1,3 +1,9 @@
+/**
+ * Shared layout primitives for full-page error screens (AppErrorPage,
+ * NotFoundErrorPage) - a consistent header/description/actions shape so
+ * every error screen looks the same regardless of what triggered it.
+ */
+
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 

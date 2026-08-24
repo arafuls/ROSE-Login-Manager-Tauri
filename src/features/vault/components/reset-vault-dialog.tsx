@@ -1,3 +1,5 @@
+/** The "lost passphrase and recovery key" last-resort vault reset dialog. */
+
 import { LoaderCircle } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
