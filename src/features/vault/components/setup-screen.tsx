@@ -61,9 +61,7 @@ export function SetupScreen() {
           </div>
           <CardTitle>Set up your vault</CardTitle>
           <CardDescription>
-            Choose a passphrase to encrypt your saved profiles. This replaces
-            hardware-derived keys from the old app, so it works across machines
-            and survives hardware changes - remember it, it can't be recovered.
+            Choose a passphrase to encrypt your saved profiles.
           </CardDescription>
         </CardHeader>
         <CardContent>

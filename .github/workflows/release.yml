@@ -51,8 +51,4 @@ jobs:
           releaseBody: 'See the assets below to download this version.'
           releaseDraft: true
           prerelease: false
-          # Attaches the raw, unpackaged binary alongside the installers -
-          # lets QA grab a runnable build directly (no install step, no
-          # packaging-specific bugs like the AppImage's GLib issue) without
-          # needing a public release.
           uploadPlainBinary: true

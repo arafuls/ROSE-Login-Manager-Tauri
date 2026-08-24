@@ -133,9 +133,6 @@ export function SettingsPage() {
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="font-semibold text-2xl">Settings</h1>
-          <p className="text-muted-foreground text-sm">
-            Configure your ROSE Online client and login manager preferences.
-          </p>
         </div>
         <div className="flex shrink-0 items-center gap-2">
           {version && (
@@ -178,7 +175,7 @@ export function SettingsPage() {
         <CardHeader>
           <CardTitle>Game folder</CardTitle>
           <CardDescription>
-            The reference path to your ROSE Online install folder.
+            The reference path to your ROSE install folder.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -189,8 +186,8 @@ export function SettingsPage() {
                   Launch mode
                 </Label>
                 <p className="text-muted-foreground text-sm">
-                  Native launches ROSE Online's own Linux client directly; Wine
-                  runs the Windows build through Wine.
+                  Native - launches Linux client directly. Wine - launches
+                  Windows build through Wine.
                 </p>
               </div>
               <Select

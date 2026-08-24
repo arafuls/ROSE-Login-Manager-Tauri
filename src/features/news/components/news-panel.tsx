@@ -27,7 +27,7 @@ export function NewsPanel() {
   return (
     <div className="flex h-full flex-col overflow-hidden rounded-xl border bg-card">
       <div className="flex items-center justify-between border-b px-4 py-2">
-        <span className="font-medium text-sm">ROSE Online News</span>
+        <span className="font-medium text-sm">News</span>
         <Button
           aria-label="Refresh news"
           disabled={loading}

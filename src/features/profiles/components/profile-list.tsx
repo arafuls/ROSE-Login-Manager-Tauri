@@ -62,7 +62,7 @@ export function ProfileList() {
         <div>
           <h1 className="font-semibold text-2xl">Profiles</h1>
           <p className="text-muted-foreground text-sm">
-            Manage your saved ROSE Online login profiles.
+            Manage your saved login profiles.
           </p>
         </div>
         <Button onClick={openCreate}>
