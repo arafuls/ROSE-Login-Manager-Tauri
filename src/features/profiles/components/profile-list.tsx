@@ -166,6 +166,7 @@ export function ProfileList() {
         onOpenChange={setExportOpen}
         open={exportOpen}
         profiles={profiles}
+        settings={settings}
       />
       <ImportDialog onOpenChange={setImportOpen} open={importOpen} />
     </div>

@@ -28,7 +28,9 @@ import {
   profilesExport,
   profilesWriteExportFile,
 } from "@/features/profiles/api";
+import { getEmailText } from "@/features/profiles/mask-email";
 import type { Profile } from "@/features/profiles/types";
+import type { Settings } from "@/features/settings/types";
 import { isBackendError } from "@/lib/tauri-errors";
 
 const exportSchema = z.object({
@@ -43,12 +45,14 @@ interface ExportDialogProps {
   onOpenChange: (open: boolean) => void;
   open: boolean;
   profiles: Profile[];
+  settings: Settings | null;
 }
 
 export function ExportDialog({
   open,
   onOpenChange,
   profiles,
+  settings,
 }: ExportDialogProps) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const form = useForm<ExportFormValues>({
@@ -122,25 +126,30 @@ export function ExportDialog({
               No profiles to export.
             </p>
           )}
-          {profiles.map((profile) => (
-            <label
-              className="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 hover:bg-accent"
-              htmlFor={`export-${profile.email}`}
-              key={profile.email}
-            >
-              <Checkbox
-                checked={selected.has(profile.email)}
-                id={`export-${profile.email}`}
-                onCheckedChange={(checked) =>
-                  toggle(profile.email, checked === true)
-                }
-              />
-              <span className="text-sm">
-                {profile.name}{" "}
-                <span className="text-muted-foreground">({profile.email})</span>
-              </span>
-            </label>
-          ))}
+          {profiles.map((profile) => {
+            const emailText = getEmailText(profile.email, settings);
+            return (
+              <label
+                className="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 hover:bg-accent"
+                htmlFor={`export-${profile.email}`}
+                key={profile.email}
+              >
+                <Checkbox
+                  checked={selected.has(profile.email)}
+                  id={`export-${profile.email}`}
+                  onCheckedChange={(checked) =>
+                    toggle(profile.email, checked === true)
+                  }
+                />
+                <span className="text-sm">
+                  {profile.name}{" "}
+                  {emailText && (
+                    <span className="text-muted-foreground">({emailText})</span>
+                  )}
+                </span>
+              </label>
+            );
+          })}
         </div>
 
         <Form {...form}>
