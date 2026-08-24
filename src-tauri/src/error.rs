@@ -36,7 +36,7 @@ pub enum AppError {
     #[error("no ROSE Online game folder is configured in settings")]
     GameFolderNotSet,
 
-    #[error("trose.exe was not found in the configured game folder")]
+    #[error("the game executable was not found in the configured game folder")]
     GameExecutableNotFound,
 
     // Only ever constructed on non-Windows builds (`wine::build_launch_command`'s

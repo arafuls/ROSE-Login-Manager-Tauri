@@ -9,10 +9,22 @@ export const LOGIN_SCREEN_OPTIONS = [
 
 export type LoginScreen = (typeof LOGIN_SCREEN_OPTIONS)[number];
 
+/**
+ * How to launch the game client on non-Windows platforms - "Wine" runs the
+ * Windows trose.exe build through Wine (see src-tauri/src/wine.rs);
+ * "Native" launches ROSE Online's own native Linux client directly (see
+ * src-tauri/src/native_launch.rs). Irrelevant on Windows, which always
+ * launches trose.exe directly regardless of this setting.
+ */
+export const LINUX_LAUNCH_MODE_OPTIONS = ["Wine", "Native"] as const;
+
+export type LinuxLaunchMode = (typeof LINUX_LAUNCH_MODE_OPTIONS)[number];
+
 export interface Settings {
   activeThemeId: string;
   displayEmail: boolean;
   launchClientBehind: boolean;
+  linuxLaunchMode: LinuxLaunchMode;
   loginScreen: LoginScreen;
   maskEmail: boolean;
   roseGameFolder: string | null;

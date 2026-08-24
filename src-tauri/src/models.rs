@@ -77,6 +77,26 @@ impl LoginScreen {
     }
 }
 
+/// How to launch the game client on non-Windows platforms. `trose.exe` (the
+/// Windows build) needs Wine (see `crate::wine`); ROSE Online's newer native
+/// Linux client (see `crate::native_launch`) ships its own `trose` binary
+/// with a completely different asset packaging format, so this is an
+/// explicit user choice, not autodetected - manually opted into per
+/// `Settings > Game folder`, defaulting to `Wine` so existing installs are
+/// unaffected. Irrelevant on Windows, which always launches `trose.exe`
+/// directly regardless of this setting.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum LinuxLaunchMode {
+    Wine,
+    Native,
+}
+
+impl Default for LinuxLaunchMode {
+    fn default() -> Self {
+        LinuxLaunchMode::Wine
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Settings {
@@ -86,6 +106,8 @@ pub struct Settings {
     pub launch_client_behind: bool,
     pub skip_planet_cutscene: bool,
     pub login_screen: LoginScreen,
+    #[serde(default)]
+    pub linux_launch_mode: LinuxLaunchMode,
     /// `Theme.id` of the currently active theme - always a real id, never
     /// null/absent, because `"rose-default"` (see `crate::theme`) is itself
     /// a valid id for the built-in palette. Keeping this non-nullable means
@@ -118,6 +140,7 @@ impl Default for Settings {
             launch_client_behind: false,
             skip_planet_cutscene: false,
             login_screen: LoginScreen::Random,
+            linux_launch_mode: LinuxLaunchMode::Wine,
             active_theme_id: crate::theme::ROSE_DEFAULT_THEME_ID.to_string(),
         }
     }
@@ -153,6 +176,8 @@ pub struct SettingsPatch {
     pub skip_planet_cutscene: Option<bool>,
     #[serde(default)]
     pub login_screen: Option<LoginScreen>,
+    #[serde(default)]
+    pub linux_launch_mode: Option<LinuxLaunchMode>,
     #[serde(default)]
     pub active_theme_id: Option<String>,
 }

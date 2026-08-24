@@ -28,6 +28,8 @@ import {
   settingsUpdate,
 } from "@/features/settings/api";
 import {
+  LINUX_LAUNCH_MODE_OPTIONS,
+  type LinuxLaunchMode,
   LOGIN_SCREEN_OPTIONS,
   type LoginScreen,
 } from "@/features/settings/types";
@@ -37,15 +39,23 @@ import { isBackendError } from "@/lib/tauri-errors";
 import { AppearanceCard } from "./appearance-card";
 
 /**
- * On Windows the game runs natively; everywhere else it runs through Wine
- * (see src-tauri/src/wine.rs), so a real install lives under a Wine
- * prefix's `drive_c`, not a Windows-style root - showing a `C:\...`
- * placeholder on Linux/macOS was actively misleading about where to look.
+ * On Windows the game runs natively, so a real install lives under a
+ * Windows-style root. Off Windows it depends on the chosen launch mode:
+ * Wine mode's install lives under a Wine prefix's `drive_c` (see
+ * src-tauri/src/wine.rs); Native mode's is a real Linux install (see
+ * src-tauri/src/native_launch.rs) with no Wine prefix at all. A static
+ * `C:\...` placeholder on Linux/macOS was actively misleading about where
+ * to look, hence this being a function of live settings state rather than
+ * a module-level constant.
  */
-const GAME_FOLDER_PLACEHOLDER =
-  platform() === "windows"
-    ? String.raw`C:\Program Files\Rednim Games\ROSE Online`
+function gameFolderPlaceholder(linuxLaunchMode: LinuxLaunchMode): string {
+  if (platform() === "windows") {
+    return String.raw`C:\Program Files\Rednim Games\ROSE Online`;
+  }
+  return linuxLaunchMode === "Native"
+    ? "~/ROSE Online"
     : "~/.wine/drive_c/Program Files/ROSE Online";
+}
 
 export function SettingsPage() {
   const { settings, loading } = useSettings();
@@ -171,37 +181,71 @@ export function SettingsPage() {
             The reference path to your ROSE Online install folder.
           </CardDescription>
         </CardHeader>
-        <CardContent className="flex gap-2">
-          <Input
-            onBlur={(e) => persist({ roseGameFolder: e.target.value || null })}
-            onChange={(e) => setFolderInput(e.target.value)}
-            placeholder={GAME_FOLDER_PLACEHOLDER}
-            value={folderInput}
-          />
-          <Button
-            disabled={browsing}
-            onClick={handleBrowse}
-            title="Browse for the folder"
-            type="button"
-            variant="outline"
-          >
-            {browsing ? (
-              <LoaderCircle className="animate-spin" />
-            ) : (
-              <FolderSearch />
-            )}
-            Browse
-          </Button>
-          <Button
-            disabled={locating}
-            onClick={handleFindAutomatically}
-            title="Find automagically"
-            type="button"
-            variant="outline"
-          >
-            {locating ? <LoaderCircle className="animate-spin" /> : <Wand2 />}
-            Find automagically
-          </Button>
+        <CardContent className="space-y-4">
+          {platform() !== "windows" && (
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <Label className="font-medium" htmlFor="linux-launch-mode">
+                  Launch mode
+                </Label>
+                <p className="text-muted-foreground text-sm">
+                  Native launches ROSE Online's own Linux client directly; Wine
+                  runs the Windows build through Wine.
+                </p>
+              </div>
+              <Select
+                onValueChange={(value: LinuxLaunchMode) =>
+                  persist({ linuxLaunchMode: value })
+                }
+                value={settings.linuxLaunchMode}
+              >
+                <SelectTrigger className="w-32" id="linux-launch-mode">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {LINUX_LAUNCH_MODE_OPTIONS.map((option) => (
+                    <SelectItem key={option} value={option}>
+                      {option}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+          <div className="flex gap-2">
+            <Input
+              onBlur={(e) =>
+                persist({ roseGameFolder: e.target.value || null })
+              }
+              onChange={(e) => setFolderInput(e.target.value)}
+              placeholder={gameFolderPlaceholder(settings.linuxLaunchMode)}
+              value={folderInput}
+            />
+            <Button
+              disabled={browsing}
+              onClick={handleBrowse}
+              title="Browse for the folder"
+              type="button"
+              variant="outline"
+            >
+              {browsing ? (
+                <LoaderCircle className="animate-spin" />
+              ) : (
+                <FolderSearch />
+              )}
+              Browse
+            </Button>
+            <Button
+              disabled={locating}
+              onClick={handleFindAutomatically}
+              title="Find automagically"
+              type="button"
+              variant="outline"
+            >
+              {locating ? <LoaderCircle className="animate-spin" /> : <Wand2 />}
+              Find automagically
+            </Button>
+          </div>
         </CardContent>
       </Card>
 

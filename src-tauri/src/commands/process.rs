@@ -30,6 +30,9 @@ use tauri_plugin_shell::process::CommandEvent;
 use crate::crypto;
 use crate::db::profiles;
 use crate::error::{AppError, AppResult};
+use crate::models::LinuxLaunchMode;
+#[cfg(not(windows))]
+use crate::native_launch;
 use crate::rose_update::progress::ProgressState;
 use crate::rose_update::sync::{sync_game_files, verify_game_files};
 use crate::settings;
@@ -101,27 +104,46 @@ fn to_app_error(err: anyhow::Error) -> AppError {
 
 /// Shared by `profiles_launch`/`client_launch_default` - both need the same
 /// exe-existence check and command spawn, differing only in which
-/// arguments they pass. `wine::build_launch_command` handles the Windows-
-/// vs-Wine branching so this function doesn't need to know or care which
-/// platform it's running on.
+/// arguments they pass. `linux_launch_mode` is only meaningful off Windows
+/// (`wine::build_launch_command`/`native_launch::build_launch_command`
+/// handle their respective platforms), so this function doesn't need any
+/// other platform-awareness of its own.
+#[cfg_attr(windows, allow(unused_variables))]
 fn spawn_trose(
     app: &AppHandle,
     game_folder_path: &Path,
     args: &[&str],
+    linux_launch_mode: LinuxLaunchMode,
 ) -> AppResult<(
     tauri::async_runtime::Receiver<CommandEvent>,
     tauri_plugin_shell::process::CommandChild,
 )> {
-    let exe_path = game_folder_path.join("trose.exe");
+    #[cfg(windows)]
+    let exe_name = "trose.exe";
+    #[cfg(not(windows))]
+    let exe_name = match linux_launch_mode {
+        LinuxLaunchMode::Wine => "trose.exe",
+        LinuxLaunchMode::Native => "trose",
+    };
+
+    let exe_path = game_folder_path.join(exe_name);
     if !exe_path.exists() {
         return Err(AppError::GameExecutableNotFound);
     }
 
-    wine::build_launch_command(app, &exe_path)?
+    #[cfg(windows)]
+    let command = wine::build_launch_command(app, &exe_path)?;
+    #[cfg(not(windows))]
+    let command = match linux_launch_mode {
+        LinuxLaunchMode::Wine => wine::build_launch_command(app, &exe_path)?,
+        LinuxLaunchMode::Native => native_launch::build_launch_command(app, &exe_path)?,
+    };
+
+    command
         .current_dir(game_folder_path)
         .args(args)
         .spawn()
-        .map_err(|e| AppError::Internal(format!("failed to launch trose.exe: {e}")))
+        .map_err(|e| AppError::Internal(format!("failed to launch game client: {e}")))
 }
 
 #[tauri::command]
@@ -151,22 +173,28 @@ pub async fn profiles_launch(
     let password = String::from_utf8(plaintext)
         .map_err(|e| AppError::Crypto(format!("stored password was not valid UTF-8: {e}")))?;
 
-    let progress = ProgressState::default();
-    run_with_progress(
-        &app,
-        "profile",
-        &progress,
-        sync_game_files(
-            game_folder_path,
-            DEFAULT_UPDATE_URL,
-            MANIFEST_NAME,
-            false,
-            progress.clone(),
-        ),
-    )
-    .await
-    .map_err(to_app_error)?;
-    emit_status(&app, "profile", false, &progress);
+    // The native Linux client's rose.vfs/data.idx packaging is a completely
+    // different, unreverse-engineered format from the Windows manifest this
+    // sync targets - see native_launch.rs's doc comment. Skipped entirely in
+    // that mode; the user is expected to keep it current via rose-updater.
+    if current_settings.linux_launch_mode != LinuxLaunchMode::Native {
+        let progress = ProgressState::default();
+        run_with_progress(
+            &app,
+            "profile",
+            &progress,
+            sync_game_files(
+                game_folder_path,
+                DEFAULT_UPDATE_URL,
+                MANIFEST_NAME,
+                false,
+                progress.clone(),
+            ),
+        )
+        .await
+        .map_err(to_app_error)?;
+        emit_status(&app, "profile", false, &progress);
+    }
 
     let (mut rx, child) = spawn_trose(
         &app,
@@ -180,6 +208,7 @@ pub async fn profiles_launch(
             "--password",
             password.as_str(),
         ],
+        current_settings.linux_launch_mode,
     )?;
 
     {
@@ -227,27 +256,30 @@ pub async fn client_launch_default(state: State<'_, AppState>, app: AppHandle) -
         .ok_or(AppError::GameFolderNotSet)?;
     let game_folder_path = Path::new(&game_folder);
 
-    let progress = ProgressState::default();
-    run_with_progress(
-        &app,
-        "default",
-        &progress,
-        sync_game_files(
-            game_folder_path,
-            DEFAULT_UPDATE_URL,
-            MANIFEST_NAME,
-            false,
-            progress.clone(),
-        ),
-    )
-    .await
-    .map_err(to_app_error)?;
-    emit_status(&app, "default", false, &progress);
+    if current_settings.linux_launch_mode != LinuxLaunchMode::Native {
+        let progress = ProgressState::default();
+        run_with_progress(
+            &app,
+            "default",
+            &progress,
+            sync_game_files(
+                game_folder_path,
+                DEFAULT_UPDATE_URL,
+                MANIFEST_NAME,
+                false,
+                progress.clone(),
+            ),
+        )
+        .await
+        .map_err(to_app_error)?;
+        emit_status(&app, "default", false, &progress);
+    }
 
     let (mut rx, child) = spawn_trose(
         &app,
         game_folder_path,
         &["--login", "--server", LOGIN_SERVER],
+        current_settings.linux_launch_mode,
     )?;
 
     if current_settings.launch_client_behind {
@@ -273,6 +305,12 @@ pub async fn updater_force_recheck(state: State<'_, AppState>, app: AppHandle) -
         .rose_game_folder
         .ok_or(AppError::GameFolderNotSet)?;
     let game_folder_path = Path::new(&game_folder);
+
+    // Meaningless against a rose.vfs-packed native install - see
+    // native_launch.rs's doc comment for why this isn't attempted there.
+    if current_settings.linux_launch_mode == LinuxLaunchMode::Native {
+        return Ok(());
+    }
 
     let progress = ProgressState::default();
     run_with_progress(

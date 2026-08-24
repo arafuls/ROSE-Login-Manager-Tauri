@@ -6,6 +6,8 @@ mod crypto;
 mod db;
 mod error;
 mod models;
+#[cfg(not(windows))]
+mod native_launch;
 mod rose_update;
 mod settings;
 mod state;

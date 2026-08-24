@@ -70,6 +70,9 @@ pub fn apply_patch(current: &Settings, patch: &SettingsPatch) -> Settings {
     if let Some(v) = patch.login_screen {
         next.login_screen = v;
     }
+    if let Some(v) = patch.linux_launch_mode {
+        next.linux_launch_mode = v;
+    }
     if let Some(v) = &patch.active_theme_id {
         next.active_theme_id = v.clone();
     }
