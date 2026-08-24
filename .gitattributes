@@ -1,0 +1,13 @@
+# Pins line endings at the repo level instead of relying on each
+# contributor's own core.autocrlf setting - this project is developed across
+# both Windows and Linux, and everything committed so far is LF already.
+# text=auto still lets git auto-detect genuinely binary files (icons, etc.)
+# so they're never touched.
+* text=auto eol=lf
+
+# Explicit for the known binary assets, as a defense-in-depth backstop to
+# text=auto's own content-sniffing.
+*.png binary
+*.ico binary
+*.icns binary
+*.webp binary

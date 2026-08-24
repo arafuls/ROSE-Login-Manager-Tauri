@@ -25,8 +25,8 @@ export function NewsPanel() {
   const { items, loading, error, refetch } = useNews();
 
   return (
-    <div className="flex h-full flex-col overflow-hidden rounded-xl border bg-card">
-      <div className="flex items-center justify-between border-b px-4 py-2">
+    <div className="flex h-full flex-col overflow-hidden">
+      <div className="flex items-center justify-between px-4">
         <span className="font-medium text-sm">News</span>
         <Button
           aria-label="Refresh news"
@@ -114,23 +114,29 @@ function NewsCard({ item }: { item: NewsItem }) {
       <div className="min-w-0 flex-1">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
-            {item.category && (
-              <p
-                className={cn(
-                  "font-heading font-semibold text-xs uppercase tracking-wide",
-                  categoryColor
-                )}
-              >
-                {item.category}
-              </p>
-            )}
-            <p className="font-medium text-sm leading-snug">{item.title}</p>
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+              {item.category && (
+                <span
+                  className={cn(
+                    "font-heading font-semibold text-xs uppercase tracking-wide",
+                    categoryColor
+                  )}
+                >
+                  {item.category}
+                </span>
+              )}
+              {item.published && (
+                <span className="text-muted-foreground text-xs">
+                  {item.published}
+                </span>
+              )}
+            </div>
+            <p className="mt-1 font-medium text-sm leading-snug">
+              {item.title}
+            </p>
           </div>
           <SquareArrowOutUpRight className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
         </div>
-        {item.published && (
-          <p className="mt-1 text-muted-foreground text-xs">{item.published}</p>
-        )}
         {item.excerpt && (
           <p className="mt-1 line-clamp-2 text-muted-foreground text-xs">
             {item.excerpt}
