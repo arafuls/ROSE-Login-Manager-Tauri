@@ -44,7 +44,7 @@ function NavTab({
           "flex items-center gap-1.5 rounded-md px-3 py-1.5 font-medium text-sm transition-colors",
           isActive
             ? "bg-primary text-primary-foreground"
-            : "text-muted-foreground hover:text-foreground"
+            : "text-nav-foreground hover:text-foreground"
         )
       }
       end={to === "/"}

@@ -64,13 +64,17 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   <SidebarMenuItem key={to}>
                     <SidebarMenuButton
                       asChild
-                      // Overrides the primitive's default active state
+                      // Active state overrides the primitive's default
                       // (bg-sidebar-accent, a neutral highlight) with the
                       // theme's actual accent color, so the active nav item
                       // matches the orange used everywhere else (toggles,
                       // primary buttons) instead of blending into the rest
-                      // of the sidebar.
-                      className="data-[active=true]:bg-sidebar-primary data-[active=true]:text-sidebar-primary-foreground"
+                      // of the sidebar. Idle state gets the dedicated
+                      // nav-foreground token instead of the primitive's
+                      // default of just inheriting --sidebar-foreground -
+                      // same reasoning as AppTopbar's inactive tabs, kept
+                      // in sync so both nav styles share one idle color.
+                      className="text-nav-foreground data-[active=true]:bg-sidebar-primary data-[active=true]:text-sidebar-primary-foreground"
                       isActive={isActive}
                     >
                       <Link to={to}>

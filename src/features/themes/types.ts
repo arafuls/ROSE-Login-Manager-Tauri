@@ -3,6 +3,10 @@
 export interface ThemeColors {
   accent: string;
   accentForeground: string;
+  /** Background of the Home screen's circular avatar placeholder. */
+  avatarBackground: string;
+  /** The person-outline icon inside the avatar placeholder above. */
+  avatarForeground: string;
   background: string;
   border: string;
   card: string;
@@ -12,6 +16,8 @@ export interface ThemeColors {
   input: string;
   muted: string;
   mutedForeground: string;
+  /** Idle (non-active, non-hover) nav item text - shared by sidebar and topbar. */
+  navForeground: string;
   popover: string;
   popoverForeground: string;
   primary: string;
@@ -93,6 +99,14 @@ export const THEME_COLOR_GROUPS: ThemeColorGroup[] = [
     fields: [
       { key: "border", label: "Border" },
       { key: "input", label: "Input border" },
+    ],
+  },
+  {
+    title: "Navigation",
+    fields: [
+      { key: "navForeground", label: "Nav text" },
+      { key: "avatarBackground", label: "Avatar background" },
+      { key: "avatarForeground", label: "Avatar icon" },
     ],
   },
 ];

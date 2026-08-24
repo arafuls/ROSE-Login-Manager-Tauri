@@ -22,6 +22,9 @@ const CSS_VAR_NAMES: Record<keyof ThemeColors, string> = {
   border: "--border",
   input: "--input",
   ring: "--ring",
+  navForeground: "--nav-foreground",
+  avatarBackground: "--avatar-background",
+  avatarForeground: "--avatar-foreground",
 };
 
 /**

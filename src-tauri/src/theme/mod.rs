@@ -62,6 +62,9 @@ fn rose_default_colors() -> ThemeColors {
         border: "#334459".to_string(),
         input: "#334459".to_string(),
         ring: "#eb9020".to_string(),
+        nav_foreground: "#9cabb9".to_string(),
+        avatar_background: "#16283a".to_string(),
+        avatar_foreground: "#9cabb9".to_string(),
     }
 }
 
@@ -91,6 +94,9 @@ fn rose_light_colors() -> ThemeColors {
         border: "#dde2e7".to_string(),
         input: "#dde2e7".to_string(),
         ring: "#eb9020".to_string(),
+        nav_foreground: "#5b6672".to_string(),
+        avatar_background: "#eef0f3".to_string(),
+        avatar_foreground: "#5b6672".to_string(),
     }
 }
 
@@ -132,6 +138,9 @@ fn dracula_colors() -> ThemeColors {
         border: "#44475a".to_string(),
         input: "#44475a".to_string(),
         ring: "#bd93f9".to_string(),
+        nav_foreground: "#6272a4".to_string(),
+        avatar_background: "#44475a".to_string(),
+        avatar_foreground: "#6272a4".to_string(),
     }
 }
 
@@ -165,6 +174,9 @@ fn nord_colors() -> ThemeColors {
         border: "#4c566a".to_string(),
         input: "#4c566a".to_string(),
         ring: "#88c0d0".to_string(),
+        nav_foreground: "#d8dee9".to_string(),
+        avatar_background: "#434c5e".to_string(),
+        avatar_foreground: "#d8dee9".to_string(),
     }
 }
 
@@ -194,6 +206,9 @@ fn catppuccin_colors() -> ThemeColors {
         border: "#45475a".to_string(),
         input: "#45475a".to_string(),
         ring: "#fab387".to_string(),
+        nav_foreground: "#a6adc8".to_string(),
+        avatar_background: "#313244".to_string(),
+        avatar_foreground: "#a6adc8".to_string(),
     }
 }
 
@@ -217,6 +232,9 @@ fn gruvbox_colors() -> ThemeColors {
         border: "#665c54".to_string(),
         input: "#665c54".to_string(),
         ring: "#fe8019".to_string(),
+        nav_foreground: "#a89984".to_string(),
+        avatar_background: "#504945".to_string(),
+        avatar_foreground: "#a89984".to_string(),
     }
 }
 

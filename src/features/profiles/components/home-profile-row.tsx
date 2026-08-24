@@ -77,8 +77,8 @@ export function HomeProfileRow({
         <GripVertical className="size-4" />
       </button>
 
-      <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted">
-        <UserRound className="size-4 text-muted-foreground" />
+      <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-avatar-background">
+        <UserRound className="size-4 text-avatar-foreground" />
       </div>
 
       <div className="min-w-0 flex-1">

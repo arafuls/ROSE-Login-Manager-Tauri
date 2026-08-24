@@ -252,11 +252,15 @@ pub struct NewsItem {
 
 /// Every themeable color token, deliberately excluding `--radius` and the
 /// font variables (out of scope - this is a color theme editor, not a full
-/// design-system editor) and the `--chart-*`/`--sidebar-*` tokens (confirmed
-/// dead: referenced nowhere outside `global.css` itself). Values are raw CSS
-/// color strings (hex, `oklch()`, etc.), stored and passed through opaquely -
-/// Rust never parses or validates them, that happens client-side via
-/// `CSS.supports('color', value)` before a save/import is ever sent here.
+/// design-system editor) and the `--chart-*` tokens (confirmed dead:
+/// referenced nowhere outside `global.css` itself). The `--sidebar-*`
+/// tokens are intentionally NOT here either, despite being live (aliased to
+/// these same fields in `global.css`) - they exist purely so the sidebar
+/// tracks the main palette automatically, not as independently editable
+/// colors. Values are raw CSS color strings (hex, `oklch()`, etc.), stored
+/// and passed through opaquely - Rust never parses or validates them, that
+/// happens client-side via `CSS.supports('color', value)` before a save/
+/// import is ever sent here.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ThemeColors {
@@ -278,6 +282,35 @@ pub struct ThemeColors {
     pub border: String,
     pub input: String,
     pub ring: String,
+    /// Idle (non-active, non-hover) nav item text, shared by the sidebar
+    /// and topbar nav styles - previously both just reused `muted_foreground`,
+    /// which coupled "nav item color" to "every other muted-text usage in
+    /// the app" with no way to style one without the other.
+    #[serde(default = "default_nav_foreground")]
+    pub nav_foreground: String,
+    /// Background of the circular avatar placeholder on the Home screen's
+    /// profile rows.
+    #[serde(default = "default_avatar_background")]
+    pub avatar_background: String,
+    /// The person-outline icon inside the avatar placeholder above.
+    #[serde(default = "default_avatar_foreground")]
+    pub avatar_foreground: String,
+}
+
+// Backward-compat fallbacks for themes saved before nav_foreground/
+// avatar_background/avatar_foreground existed - match rose_default_colors'
+// muted/muted_foreground (see theme/mod.rs), which is what these fields
+// replaced, so an old theme's look doesn't change on load.
+fn default_nav_foreground() -> String {
+    "#9cabb9".to_string()
+}
+
+fn default_avatar_background() -> String {
+    "#16283a".to_string()
+}
+
+fn default_avatar_foreground() -> String {
+    "#9cabb9".to_string()
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
