@@ -110,6 +110,38 @@ pub fn vault_recover(
     Ok(())
 }
 
+/// Rotates the passphrase while it's still known - unlike `vault_recover`,
+/// this doesn't need the recovery key. Authenticates via `current_passphrase`
+/// (a decrypt failure means it was wrong), then re-wraps the *same* DEK
+/// under a freshly-salted key derived from `new_passphrase`. The recovery-
+/// key wrapping is untouched - it keeps working afterward, same as after
+/// `vault_recover`. `state.vault_key` doesn't need updating: only how the
+/// DEK is wrapped changes, not the DEK itself, so the already-unlocked
+/// session key stays valid.
+#[tauri::command]
+pub fn vault_change_passphrase(
+    current_passphrase: String,
+    new_passphrase: String,
+    state: State<AppState>,
+) -> AppResult<()> {
+    crypto::validate_passphrase_len(&new_passphrase)?;
+
+    let conn = state.db.lock().unwrap();
+    let meta = vault_meta::load(&conn)?.ok_or(AppError::VaultNotInitialized)?;
+
+    let current_key = crypto::derive_key(&current_passphrase, &meta.passphrase_salt)?;
+    let dek_bytes = crypto::decrypt(&current_key, &meta.wrapped_dek_by_passphrase)
+        .map_err(|_| AppError::WrongPassphrase)?;
+    let dek = to_vault_key(dek_bytes)?;
+
+    let new_salt = crypto::random_salt();
+    let new_key = crypto::derive_key(&new_passphrase, &new_salt)?;
+    let new_wrapped_dek = crypto::encrypt(&new_key, &dek)?;
+    vault_meta::update_passphrase_wrap(&conn, &new_salt, &new_wrapped_dek)?;
+
+    Ok(())
+}
+
 /// Last resort when both the passphrase and the recovery key are lost: wipes
 /// the vault and every saved profile, returning the app to first-run state.
 /// No confirmation/undo at this layer - the frontend is responsible for

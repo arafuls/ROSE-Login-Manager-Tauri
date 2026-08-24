@@ -61,6 +61,20 @@ export async function vaultRecover(
   }
 }
 
+export async function vaultChangePassphrase(
+  currentPassphrase: string,
+  newPassphrase: string
+): Promise<void> {
+  try {
+    await invoke("vault_change_passphrase", {
+      currentPassphrase,
+      newPassphrase,
+    });
+  } catch (error) {
+    throw toVaultError(error);
+  }
+}
+
 export async function vaultReset(): Promise<void> {
   await invoke("vault_reset");
 }

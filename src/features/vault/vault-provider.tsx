@@ -7,6 +7,7 @@ import {
   useState,
 } from "react";
 import {
+  vaultChangePassphrase,
   vaultIsInitialized,
   vaultIsUnlocked,
   vaultLock,
@@ -24,6 +25,10 @@ type VaultStatus =
   | "unlocked";
 
 interface VaultContextValue {
+  changePassphrase: (
+    currentPassphrase: string,
+    newPassphrase: string
+  ) => Promise<void>;
   /** Dismisses the recovery-key screen once the user has confirmed they saved it. */
   confirmRecoveryKeySaved: () => void;
   lock: () => Promise<void>;
@@ -85,6 +90,17 @@ export function VaultProvider({ children }: { children: ReactNode }) {
     []
   );
 
+  // No status transition - stays "unlocked" before and after. The DEK
+  // itself doesn't change (only how it's wrapped), so the in-memory
+  // session key on the Rust side is still valid; nothing here needs to
+  // re-derive or re-fetch anything.
+  const changePassphrase = useCallback(
+    async (currentPassphrase: string, newPassphrase: string) => {
+      await vaultChangePassphrase(currentPassphrase, newPassphrase);
+    },
+    []
+  );
+
   const reset = useCallback(async () => {
     await vaultReset();
     setStatus("needs-setup");
@@ -104,6 +120,7 @@ export function VaultProvider({ children }: { children: ReactNode }) {
         setup,
         unlock,
         recover,
+        changePassphrase,
         reset,
         lock,
       }}

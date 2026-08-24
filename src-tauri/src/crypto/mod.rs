@@ -225,4 +225,59 @@ mod tests {
 
         assert_eq!(unwrapped, dek);
     }
+
+    /// Mirrors what `vault_change_passphrase` does at the crypto level:
+    /// re-wrap the same DEK under a newly-salted key derived from a new
+    /// passphrase. Confirms the new passphrase unwraps it, the old
+    /// passphrase no longer does (it was derived under the old salt, which
+    /// is discarded), and the DEK itself - what actually encrypts profile
+    /// data - is unchanged throughout.
+    #[test]
+    fn changing_passphrase_rewraps_dek_and_invalidates_the_old_passphrase() {
+        let dek = generate_dek();
+
+        let old_salt = random_salt();
+        let old_key = derive_key("old passphrase", &old_salt).unwrap();
+        let old_wrapped = encrypt(&old_key, &dek).unwrap();
+
+        // The "change passphrase" operation: authenticate via the old
+        // wrapping, then re-wrap the same DEK under a fresh salt/passphrase.
+        let recovered_dek = decrypt(&old_key, &old_wrapped).unwrap();
+        assert_eq!(recovered_dek, dek);
+
+        let new_salt = random_salt();
+        let new_key = derive_key("new passphrase", &new_salt).unwrap();
+        let new_wrapped = encrypt(&new_key, &recovered_dek).unwrap();
+
+        let unwrapped_with_new = decrypt(&new_key, &new_wrapped).unwrap();
+        assert_eq!(unwrapped_with_new, dek);
+
+        // The old passphrase's key can't unwrap the new blob - a wrong
+        // passphrase after rotation must fail exactly like a wrong
+        // passphrase always does (AEAD authentication failure).
+        assert!(decrypt(&old_key, &new_wrapped).is_err());
+    }
+
+    /// The recovery-key wrapping is a separate row/value entirely -
+    /// `vault_change_passphrase` only ever touches the passphrase wrapping,
+    /// so a recovery-key-derived key must keep unwrapping the *same* DEK
+    /// both before and after a passphrase change.
+    #[test]
+    fn recovery_key_wrapping_is_unaffected_by_a_passphrase_change() {
+        let dek = generate_dek();
+        let recovery_salt = random_salt();
+        let recovery_key = generate_recovery_key();
+        let recovery_derived =
+            derive_key(&normalize_recovery_key(&recovery_key), &recovery_salt).unwrap();
+        let wrapped_by_recovery = encrypt(&recovery_derived, &dek).unwrap();
+
+        // Simulate a passphrase change happening independently - it never
+        // reads or writes anything recovery-related.
+        let new_passphrase_salt = random_salt();
+        let new_passphrase_key = derive_key("new passphrase", &new_passphrase_salt).unwrap();
+        let _new_wrapped_dek = encrypt(&new_passphrase_key, &dek).unwrap();
+
+        let unwrapped = decrypt(&recovery_derived, &wrapped_by_recovery).unwrap();
+        assert_eq!(unwrapped, dek);
+    }
 }

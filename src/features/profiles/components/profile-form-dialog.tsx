@@ -202,6 +202,7 @@ export function ProfileFormDialog({
                         className="absolute top-1/2 right-1 -translate-y-1/2"
                         onClick={() => setShowPassword((v) => !v)}
                         size="icon-sm"
+                        tabIndex={-1}
                         type="button"
                         variant="ghost"
                       >

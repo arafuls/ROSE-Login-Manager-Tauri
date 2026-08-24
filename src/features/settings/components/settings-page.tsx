@@ -29,6 +29,7 @@ import {
   type LoginScreen,
 } from "@/features/settings/types";
 import { useSettings } from "@/features/settings/use-settings";
+import { ChangePassphraseDialog } from "@/features/vault/components/change-passphrase-dialog";
 import { isBackendError } from "@/lib/tauri-errors";
 import { AppearanceCard } from "./appearance-card";
 
@@ -36,6 +37,7 @@ export function SettingsPage() {
   const { settings, loading } = useSettings();
   const [locating, setLocating] = useState(false);
   const [browsing, setBrowsing] = useState(false);
+  const [changePassphraseOpen, setChangePassphraseOpen] = useState(false);
   // The game folder Input is controlled from this, not directly from
   // `settings.roseGameFolder` - a plain `defaultValue` only applies once on
   // mount, so a value set by Find automatically/Browse (which update
@@ -104,6 +106,23 @@ export function SettingsPage() {
           Configure your ROSE Online client and login manager preferences.
         </p>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Security</CardTitle>
+          <CardDescription>
+            Change the passphrase that unlocks your vault.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button
+            onClick={() => setChangePassphraseOpen(true)}
+            variant="outline"
+          >
+            Change passphrase
+          </Button>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
@@ -233,6 +252,11 @@ export function SettingsPage() {
       </Card>
 
       <AppearanceCard />
+
+      <ChangePassphraseDialog
+        onOpenChange={setChangePassphraseOpen}
+        open={changePassphraseOpen}
+      />
     </div>
   );
 }

@@ -51,6 +51,7 @@ fn main() {
             commands::vault::vault_setup,
             commands::vault::vault_unlock,
             commands::vault::vault_recover,
+            commands::vault::vault_change_passphrase,
             commands::vault::vault_reset,
             commands::vault::vault_is_unlocked,
             commands::vault::vault_lock,
