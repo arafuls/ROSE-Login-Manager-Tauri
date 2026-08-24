@@ -62,7 +62,17 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     : location.pathname.startsWith(to);
                 return (
                   <SidebarMenuItem key={to}>
-                    <SidebarMenuButton asChild isActive={isActive}>
+                    <SidebarMenuButton
+                      asChild
+                      // Overrides the primitive's default active state
+                      // (bg-sidebar-accent, a neutral highlight) with the
+                      // theme's actual accent color, so the active nav item
+                      // matches the orange used everywhere else (toggles,
+                      // primary buttons) instead of blending into the rest
+                      // of the sidebar.
+                      className="data-[active=true]:bg-sidebar-primary data-[active=true]:text-sidebar-primary-foreground"
+                      isActive={isActive}
+                    >
                       <Link to={to}>
                         <Icon />
                         <span>{label}</span>
