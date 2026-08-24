@@ -22,6 +22,8 @@ fn main() {
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_window_state::Builder::default().build())
+        .plugin(tauri_plugin_opener::init())
         .setup(|app| {
             let app_data_dir = app
                 .path()
@@ -65,6 +67,7 @@ fn main() {
             commands::settings::settings_get,
             commands::settings::settings_update,
             commands::settings::settings_find_game_folder,
+            commands::news::news_fetch,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

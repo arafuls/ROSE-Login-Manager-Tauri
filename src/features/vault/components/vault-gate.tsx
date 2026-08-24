@@ -15,7 +15,7 @@ export function VaultGate({ children }: { children: ReactNode }) {
 
   if (status === "checking") {
     return (
-      <div className="flex h-screen items-center justify-center">
+      <div className="flex h-full items-center justify-center">
         <LoaderCircle className="size-6 animate-spin text-muted-foreground" />
       </div>
     );

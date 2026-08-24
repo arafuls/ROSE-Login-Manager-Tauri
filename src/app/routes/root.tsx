@@ -1,7 +1,6 @@
 import { House, LogOut, Settings as SettingsIcon, Users } from "lucide-react";
 import type { ComponentType } from "react";
 import { NavLink, Outlet } from "react-router";
-import roseLogo from "@/assets/rose-logo.webp";
 import { Button } from "@/components/ui/button";
 import { VaultGate } from "@/features/vault/components/vault-gate";
 import { useVault, VaultProvider } from "@/features/vault/vault-provider";
@@ -11,22 +10,13 @@ function AppShell() {
   const { lock } = useVault();
 
   return (
-    <div className="flex h-screen flex-col">
+    <div className="flex h-full flex-col">
       <header className="flex items-center justify-between border-b px-4 py-2">
-        <div className="flex items-center gap-4">
-          <img
-            alt="ROSE Online"
-            className="h-6 w-auto"
-            height={187}
-            src={roseLogo}
-            width={331}
-          />
-          <nav className="flex items-center gap-1">
-            <NavTab icon={House} label="Home" to="/" />
-            <NavTab icon={Users} label="Profiles" to="/profiles" />
-            <NavTab icon={SettingsIcon} label="Settings" to="/settings" />
-          </nav>
-        </div>
+        <nav className="flex items-center gap-1">
+          <NavTab icon={House} label="Home" to="/" />
+          <NavTab icon={Users} label="Profiles" to="/profiles" />
+          <NavTab icon={SettingsIcon} label="Settings" to="/settings" />
+        </nav>
         <Button onClick={lock} size="sm" title="Lock the vault" variant="ghost">
           <LogOut className="size-4" />
           Lock

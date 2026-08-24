@@ -47,7 +47,7 @@ export function UnlockScreen() {
   const [resetOpen, setResetOpen] = useState(false);
 
   return (
-    <div className="flex h-screen items-center justify-center p-4">
+    <div className="flex h-full items-center justify-center p-4">
       <Card className="w-full max-w-sm">
         {mode === "unlock" ? (
           <UnlockForm onForgotPassphrase={() => setMode("recover")} />

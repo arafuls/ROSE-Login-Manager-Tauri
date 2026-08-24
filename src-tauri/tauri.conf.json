@@ -18,7 +18,7 @@
   },
   "productName": "ROSE Login Manager",
   "version": "0.1.0",
-  "identifier": "com.arafuls.rose-login-manager",
+  "identifier": "rose-login-manager-tauri",
   "plugins": {
     "process": {
       "active": true
@@ -31,11 +31,12 @@
     "windows": [
       {
         "title": "ROSE Login Manager",
-        "width": 1164,
-        "height": 702,
-        "minWidth": 1164,
-        "minHeight": 702,
-        "dragDropEnabled": false
+        "width": 900,
+        "height": 650,
+        "minWidth": 900,
+        "minHeight": 600,
+        "dragDropEnabled": false,
+        "decorations": false
       }
     ]
   }

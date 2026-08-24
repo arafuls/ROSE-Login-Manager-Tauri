@@ -33,7 +33,7 @@ export function RecoveryKeyScreen() {
   };
 
   return (
-    <div className="flex h-screen items-center justify-center p-4">
+    <div className="flex h-full items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="items-center text-center">
           <div className="mx-auto mb-2 flex size-12 items-center justify-center rounded-full bg-muted">

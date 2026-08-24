@@ -61,7 +61,7 @@ export function ProfileCard({
   return (
     <Card
       className={cn(
-        "flex flex-row items-center gap-3 p-3",
+        "flex flex-row items-center gap-3 p-3 transition-colors hover:bg-primary/15",
         isDragging && "opacity-50"
       )}
       ref={setNodeRef}
@@ -77,7 +77,7 @@ export function ProfileCard({
 
       <button
         aria-label="Drag to reorder"
-        className="cursor-grab touch-none text-muted-foreground hover:text-foreground active:cursor-grabbing"
+        className="-m-3 cursor-grab touch-none p-3 text-muted-foreground hover:text-foreground active:cursor-grabbing"
         type="button"
         {...attributes}
         {...listeners}

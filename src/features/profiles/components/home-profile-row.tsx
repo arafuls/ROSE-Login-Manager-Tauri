@@ -1,6 +1,6 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical, LoaderCircle, Play, UserRound } from "lucide-react";
+import { GripVertical, LoaderCircle, UserRound } from "lucide-react";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -46,7 +46,7 @@ export function HomeProfileRow({ profile, onLaunch }: HomeProfileRowProps) {
   return (
     <Card
       className={cn(
-        "flex flex-row items-center gap-3 p-3",
+        "flex flex-row items-center gap-3 p-3 transition-colors hover:bg-primary/15",
         isDragging && "opacity-50"
       )}
       ref={setNodeRef}
@@ -54,7 +54,7 @@ export function HomeProfileRow({ profile, onLaunch }: HomeProfileRowProps) {
     >
       <button
         aria-label="Drag to reorder"
-        className="cursor-grab touch-none text-muted-foreground hover:text-foreground active:cursor-grabbing"
+        className="-m-3 cursor-grab touch-none p-3 text-muted-foreground hover:text-foreground active:cursor-grabbing"
         type="button"
         {...attributes}
         {...listeners}
@@ -82,12 +82,8 @@ export function HomeProfileRow({ profile, onLaunch }: HomeProfileRowProps) {
         onClick={handleLaunch}
         size="sm"
       >
-        {launching ? (
-          <LoaderCircle className="size-4 animate-spin" />
-        ) : (
-          <Play className="size-4" />
-        )}
-        Play
+        {launching ? <LoaderCircle className="size-4 animate-spin" /> : null}
+        PLAY
       </Button>
     </Card>
   );

@@ -7,6 +7,12 @@
     "core:default",
     "process:default",
     "shell:default",
-    "dialog:default"
+    "dialog:default",
+    "core:window:default",
+    "core:window:allow-close",
+    "core:window:allow-minimize",
+    "core:window:allow-toggle-maximize",
+    "core:window:allow-start-dragging",
+    "opener:default"
   ]
 }

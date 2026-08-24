@@ -155,3 +155,28 @@ pub struct ExportedProfile {
     pub email: String,
     pub password: String,
 }
+
+/// One entry from `news_fetch`. Sourced from the news API
+/// (roseonlinegame.com/api/v1/news), not the HTML listing page it
+/// replaced - the API is versioned and structured (a real `category`
+/// object, a direct thumbnail URL, an ISO 8601 timestamp) instead of
+/// requiring CSS-selector scraping that silently breaks if the page's
+/// markup changes. `published` is reformatted from the API's ISO 8601
+/// `published_at` into "May 31, 2026" style text server-side, so the
+/// frontend can display it as-is.
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct NewsItem {
+    pub title: String,
+    pub link: String,
+    pub published: String,
+    pub excerpt: String,
+    /// e.g. "Maintenance", "Development", "News" - whatever text the site
+    /// puts in the badge. Not a closed enum on purpose: the site controls
+    /// this vocabulary, not us, and a new category value should degrade
+    /// to a plain label instead of failing to deserialize.
+    pub category: String,
+    /// `None` if a post genuinely has no thumbnail - handled explicitly
+    /// on the frontend rather than falling back to an empty string.
+    pub thumbnail: Option<String>,
+}

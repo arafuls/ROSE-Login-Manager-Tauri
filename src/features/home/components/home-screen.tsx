@@ -72,7 +72,7 @@ export function HomeScreen() {
   return (
     <div className="flex h-full flex-col gap-4 p-6">
       <div className="grid min-h-0 flex-1 grid-cols-[320px_1fr] gap-4">
-        <div className="flex flex-col gap-2 overflow-y-auto overflow-x-hidden px-1">
+        <div className="flex min-h-0 flex-col gap-2 overflow-y-auto overflow-x-hidden px-1">
           {loading && (
             <div className="flex h-40 items-center justify-center">
               <LoaderCircle className="size-6 animate-spin text-muted-foreground" />
@@ -125,6 +125,7 @@ export function HomeScreen() {
             <Button
               disabled={verifying}
               onClick={handleForceRecheck}
+              size="sm"
               variant="outline"
             >
               {verifying ? (
@@ -134,13 +135,18 @@ export function HomeScreen() {
               )}
               Verify Files
             </Button>
-            <Button className="w-48" disabled={playing} onClick={handlePlay}>
+            <Button
+              className="w-28"
+              disabled={playing}
+              onClick={handlePlay}
+              size="sm"
+            >
               {playing ? (
                 <LoaderCircle className="size-4 animate-spin" />
               ) : (
                 <Play className="size-4" />
               )}
-              Play
+              PLAY
             </Button>
           </div>
         </div>

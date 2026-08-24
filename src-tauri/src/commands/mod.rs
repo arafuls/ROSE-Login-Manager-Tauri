@@ -1,3 +1,4 @@
+pub mod news;
 pub mod process;
 pub mod profiles;
 pub mod settings;
