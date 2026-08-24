@@ -13,6 +13,7 @@ import { HomeProfileRow } from "@/features/profiles/components/home-profile-row"
 import type { Profile } from "@/features/profiles/types";
 import { useProfileReorder } from "@/features/profiles/use-profile-reorder";
 import { useProfiles } from "@/features/profiles/use-profiles";
+import { useSettings } from "@/features/settings/use-settings";
 import {
   clientLaunchDefault,
   updaterForceRecheck,
@@ -22,6 +23,7 @@ import { isBackendError } from "@/lib/tauri-errors";
 
 export function HomeScreen() {
   const { profiles, loading, refetch } = useProfiles();
+  const { settings } = useSettings();
   const {
     displayedProfiles,
     sensors,
@@ -107,6 +109,7 @@ export function HomeScreen() {
                       key={profile.email}
                       onLaunch={() => handleLaunch(profile)}
                       profile={profile}
+                      settings={settings}
                     />
                   ))}
                 </div>

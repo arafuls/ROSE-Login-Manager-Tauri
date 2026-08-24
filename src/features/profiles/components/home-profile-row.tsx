@@ -5,12 +5,21 @@ import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { getEmailText } from "@/features/profiles/mask-email";
 import type { Profile } from "@/features/profiles/types";
+import type { Settings } from "@/features/settings/types";
 import { cn } from "@/lib/utils";
 
 interface HomeProfileRowProps {
   onLaunch: () => Promise<void>;
   profile: Profile;
+  /**
+   * `null` while settings are still loading (or failed to load) - email
+   * display just stays off rather than the row being gated on it, so a
+   * settings hiccup can't hide the whole list the way it once did on the
+   * Profiles page.
+   */
+  settings: Settings | null;
 }
 
 /**
@@ -18,7 +27,11 @@ interface HomeProfileRowProps {
  * and Play. Full management (edit/delete/export/import) lives on the
  * Profiles page instead; this intentionally doesn't duplicate that chrome.
  */
-export function HomeProfileRow({ profile, onLaunch }: HomeProfileRowProps) {
+export function HomeProfileRow({
+  profile,
+  onLaunch,
+  settings,
+}: HomeProfileRowProps) {
   const {
     attributes,
     listeners,
@@ -42,6 +55,8 @@ export function HomeProfileRow({ profile, onLaunch }: HomeProfileRowProps) {
       setLaunching(false);
     }
   };
+
+  const emailText = getEmailText(profile.email, settings);
 
   return (
     <Card
@@ -75,6 +90,9 @@ export function HomeProfileRow({ profile, onLaunch }: HomeProfileRowProps) {
             </Badge>
           )}
         </div>
+        {emailText && (
+          <p className="truncate text-muted-foreground text-sm">{emailText}</p>
+        )}
       </div>
 
       <Button

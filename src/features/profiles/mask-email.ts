@@ -1,3 +1,21 @@
+import type { Settings } from "@/features/settings/types";
+
+/**
+ * Shared by both places a profile's email can be shown (the Profiles page's
+ * `ProfileCard` and the Home screen's `HomeProfileRow`) so `displayEmail`/
+ * `maskEmail` behave identically everywhere a profile is listed, rather
+ * than only working on one page.
+ */
+export function getEmailText(
+  email: string,
+  settings: Settings | null
+): string | null {
+  if (!settings?.displayEmail) {
+    return null;
+  }
+  return settings.maskEmail ? maskEmail(email) : email;
+}
+
 /**
  * Ported from the old app's `ProfileCardViewModel.Mask`: keeps the first and
  * last character of the local part and asterisks out the middle, leaving

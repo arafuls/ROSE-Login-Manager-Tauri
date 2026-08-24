@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { maskEmail } from "@/features/profiles/mask-email";
+import { getEmailText } from "@/features/profiles/mask-email";
 import type { Profile } from "@/features/profiles/types";
 import type { Settings } from "@/features/settings/types";
 import { cn } from "@/lib/utils";
@@ -143,11 +143,4 @@ export function ProfileCard({
       </div>
     </Card>
   );
-}
-
-function getEmailText(email: string, settings: Settings): string | null {
-  if (!settings.displayEmail) {
-    return null;
-  }
-  return settings.maskEmail ? maskEmail(email) : email;
 }
