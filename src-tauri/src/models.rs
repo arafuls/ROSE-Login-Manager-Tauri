@@ -97,6 +97,21 @@ impl Default for LinuxLaunchMode {
     }
 }
 
+/// Sidebar vs. the original top toolbar - a persisted user preference, not a
+/// one-way migration. `Default` = `Sidebar`, matching current shipped
+/// behavior so existing installs see no change.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum NavStyle {
+    Sidebar,
+    Topbar,
+}
+
+impl Default for NavStyle {
+    fn default() -> Self {
+        NavStyle::Sidebar
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Settings {
@@ -108,6 +123,8 @@ pub struct Settings {
     pub login_screen: LoginScreen,
     #[serde(default)]
     pub linux_launch_mode: LinuxLaunchMode,
+    #[serde(default)]
+    pub nav_style: NavStyle,
     /// `Theme.id` of the currently active theme - always a real id, never
     /// null/absent, because `"rose-default"` (see `crate::theme`) is itself
     /// a valid id for the built-in palette. Keeping this non-nullable means
@@ -141,6 +158,7 @@ impl Default for Settings {
             skip_planet_cutscene: false,
             login_screen: LoginScreen::Random,
             linux_launch_mode: LinuxLaunchMode::Wine,
+            nav_style: NavStyle::Sidebar,
             active_theme_id: crate::theme::ROSE_DEFAULT_THEME_ID.to_string(),
         }
     }
@@ -178,6 +196,8 @@ pub struct SettingsPatch {
     pub login_screen: Option<LoginScreen>,
     #[serde(default)]
     pub linux_launch_mode: Option<LinuxLaunchMode>,
+    #[serde(default)]
+    pub nav_style: Option<NavStyle>,
     #[serde(default)]
     pub active_theme_id: Option<String>,
 }

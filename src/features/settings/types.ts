@@ -20,6 +20,11 @@ export const LINUX_LAUNCH_MODE_OPTIONS = ["Wine", "Native"] as const;
 
 export type LinuxLaunchMode = (typeof LINUX_LAUNCH_MODE_OPTIONS)[number];
 
+/** Sidebar vs. the original top toolbar - a persisted user preference. */
+export const NAV_STYLE_OPTIONS = ["Sidebar", "Topbar"] as const;
+
+export type NavStyle = (typeof NAV_STYLE_OPTIONS)[number];
+
 export interface Settings {
   activeThemeId: string;
   displayEmail: boolean;
@@ -27,6 +32,7 @@ export interface Settings {
   linuxLaunchMode: LinuxLaunchMode;
   loginScreen: LoginScreen;
   maskEmail: boolean;
+  navStyle: NavStyle;
   roseGameFolder: string | null;
   skipPlanetCutscene: boolean;
 }

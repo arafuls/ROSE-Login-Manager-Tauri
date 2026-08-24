@@ -129,7 +129,11 @@ export function SettingsPage() {
   };
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6 p-6">
+    // w-full: this div is a flex item when the sidebar nav is active
+    // (SidebarInset is flex/flex-col) - without it, mx-auto's auto margins
+    // make the item shrink-to-fit its content instead of filling up to
+    // max-w-2xl (same bug as profile-list.tsx's outer container).
+    <div className="mx-auto w-full max-w-2xl space-y-6 p-6">
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="font-semibold text-2xl">Settings</h1>

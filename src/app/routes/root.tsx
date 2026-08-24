@@ -1,69 +1,48 @@
-import { House, LogOut, Settings as SettingsIcon, Users } from "lucide-react";
-import type { ComponentType } from "react";
-import { NavLink, Outlet } from "react-router";
-import { Button } from "@/components/ui/button";
+import { Outlet } from "react-router";
+import { AppSidebar } from "@/components/app-sidebar";
+import { AppTopbar } from "@/components/app-topbar";
+import { SidebarInset } from "@/components/ui/sidebar";
+import { useSettings } from "@/features/settings/use-settings";
 import { VaultGate } from "@/features/vault/components/vault-gate";
-import { useVault, VaultProvider } from "@/features/vault/vault-provider";
-import { cn } from "@/lib/utils";
 
+// SidebarProvider itself lives in src/app/index.tsx, wrapping both this
+// route tree and the custom TitleBar - the titlebar's sidebar-toggle button
+// needs the same useSidebar() context, and TitleBar renders outside the
+// router entirely, so the provider has to sit above both. It stays mounted
+// unconditionally regardless of navStyle (see index.tsx) - fully inert here
+// in Topbar mode, since nothing below renders a <Sidebar>/<SidebarTrigger>.
 function AppShell() {
-  const { lock } = useVault();
+  const { settings } = useSettings();
+
+  // Defaults to Sidebar (matching the backend/type default) while settings
+  // are still loading, so there's no layout flash-then-swap for the common
+  // case of an install with no explicit preference yet.
+  if (settings?.navStyle === "Topbar") {
+    return (
+      <div className="flex h-full w-full flex-col">
+        <AppTopbar />
+        <main className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
+          <Outlet />
+        </main>
+      </div>
+    );
+  }
 
   return (
-    <div className="flex h-full flex-col">
-      <header className="flex items-center justify-between border-b px-4 py-2">
-        <nav className="flex items-center gap-1">
-          <NavTab icon={House} label="Home" to="/" />
-          <NavTab icon={Users} label="Profiles" to="/profiles" />
-          <NavTab icon={SettingsIcon} label="Settings" to="/settings" />
-        </nav>
-        <Button onClick={lock} size="sm" title="Lock the vault" variant="ghost">
-          <LogOut className="size-4" />
-          Lock
-        </Button>
-      </header>
-      <main className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
+    <>
+      <AppSidebar />
+      <SidebarInset className="min-h-0 overflow-y-auto overflow-x-hidden">
         <Outlet />
-      </main>
-    </div>
-  );
-}
-
-function NavTab({
-  to,
-  icon: Icon,
-  label,
-}: {
-  to: string;
-  icon: ComponentType<{ className?: string }>;
-  label: string;
-}) {
-  return (
-    <NavLink
-      className={({ isActive }) =>
-        cn(
-          "flex items-center gap-1.5 rounded-md px-3 py-1.5 font-medium text-sm transition-colors",
-          isActive
-            ? "bg-accent text-accent-foreground"
-            : "text-muted-foreground hover:text-foreground"
-        )
-      }
-      end={to === "/"}
-      to={to}
-    >
-      <Icon className="size-4" />
-      {label}
-    </NavLink>
+      </SidebarInset>
+    </>
   );
 }
 
 function Root() {
   return (
-    <VaultProvider>
-      <VaultGate>
-        <AppShell />
-      </VaultGate>
-    </VaultProvider>
+    <VaultGate>
+      <AppShell />
+    </VaultGate>
   );
 }
 

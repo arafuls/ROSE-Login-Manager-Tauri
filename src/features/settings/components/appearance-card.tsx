@@ -28,6 +28,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { settingsUpdate } from "@/features/settings/api";
+import { NAV_STYLE_OPTIONS, type NavStyle } from "@/features/settings/types";
 import { useSettings } from "@/features/settings/use-settings";
 import {
   themeDelete,
@@ -56,6 +57,16 @@ export function AppearanceCard() {
       await settingsUpdate({ activeThemeId: id });
     } catch (error) {
       toast.error("Couldn't switch theme", {
+        description: isBackendError(error) ? error.message : undefined,
+      });
+    }
+  };
+
+  const setNavStyle = async (navStyle: NavStyle) => {
+    try {
+      await settingsUpdate({ navStyle });
+    } catch (error) {
+      toast.error("Couldn't switch navigation style", {
         description: isBackendError(error) ? error.message : undefined,
       });
     }
@@ -228,6 +239,27 @@ export function AppearanceCard() {
           >
             <Trash2 className="size-4" />
           </Button>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <span className="text-muted-foreground text-sm">
+            Navigation style
+          </span>
+          <Select
+            onValueChange={(value) => setNavStyle(value as NavStyle)}
+            value={settings?.navStyle ?? "Sidebar"}
+          >
+            <SelectTrigger className="w-40">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {NAV_STYLE_OPTIONS.map((style) => (
+                <SelectItem key={style} value={style}>
+                  {style}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="flex gap-2">

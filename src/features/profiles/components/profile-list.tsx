@@ -57,15 +57,26 @@ export function ProfileList() {
   };
 
   return (
-    <div className="mx-auto flex h-full max-w-2xl flex-col gap-4 p-6">
-      <div className="flex items-center justify-between">
-        <div>
+    // w-full matters here, not just max-w-2xl/mx-auto: SidebarInset (this
+    // div's parent in Sidebar mode) is itself flex/flex-col, which makes
+    // this a flex item - without an explicit width, a flex item with auto
+    // margins shrinks to fit its content instead of filling the parent, so
+    // the max-w cap was never actually being reached. Topbar mode's <main>
+    // is a plain block element, where mx-auto/max-w-2xl alone already work
+    // as expected - w-full makes this div behave the same in both.
+    <div className="mx-auto flex h-full w-full max-w-2xl flex-col gap-4 p-6">
+      <div className="flex items-center justify-between gap-4">
+        {/* min-w-0 lets this block shrink/wrap its text instead of a flex
+            item's default min-width:auto forcing the row to overflow (and
+            squeeze the button) when the available width is narrower, e.g.
+            in Sidebar nav mode. */}
+        <div className="min-w-0">
           <h1 className="font-semibold text-2xl">Profiles</h1>
           <p className="text-muted-foreground text-sm">
             Manage your saved login profiles.
           </p>
         </div>
-        <Button onClick={openCreate}>
+        <Button className="shrink-0" onClick={openCreate}>
           <Plus className="size-4" />
           Add profile
         </Button>
