@@ -11,7 +11,15 @@ edition = "2021"
 tauri-build = { version = "2.0.3", features = [] }
 
 [dependencies]
-tauri = { version = "2.11.2", features = [] }
+# Exact-pinned to match @tauri-apps/api's pinned npm version (package.json)
+# - the Rust tauri crate publishes patch releases independently of the npm
+# package, so these two must be checked against each other directly rather
+# than assumed to line up from independent semver ranges. 2.10.1 (an
+# earlier candidate) turned out to have a real API mismatch against its
+# own tauri-runtime/tauri-runtime-wry sibling crates (a Sync bound
+# difference) even in a from-scratch dependency resolution - 2.11.1
+# compiles cleanly with its actual siblings.
+tauri = { version = "=2.11.1", features = [] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 tauri-plugin-shell = "2"
@@ -45,6 +53,7 @@ futures = "0.3"
 reqwest = { version = "0.13", default-features = false, features = ["json", "brotli", "rustls"] }
 tracing = "0.1"
 tauri-plugin-opener = "2.5.4"
+tauri-plugin-updater = "2.10.1"
 
 [features]
 # This feature is used for production builds or when a dev server is not specified, DO NOT REMOVE!!

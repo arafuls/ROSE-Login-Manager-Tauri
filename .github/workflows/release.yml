@@ -1,0 +1,47 @@
+name: 'release'
+
+# Triggered by pushing a version tag (e.g. `v0.2.0`), not a branch - an
+# explicit, deliberate action rather than something that fires on every
+# push to a long-lived branch.
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  publish-tauri:
+    permissions:
+      contents: write
+    # Windows only - this app's own dependencies (winreg, the windows
+    # crate for Win32 window APIs) aren't behind any target_os cfg gate,
+    # so it only ever compiles on Windows regardless of what a build
+    # matrix here might attempt.
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: install bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: './src-tauri -> target'
+
+      - name: install frontend dependencies
+        run: bun install
+
+      - uses: tauri-apps/tauri-action@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        with:
+          tagName: v__VERSION__
+          releaseName: 'ROSE Login Manager v__VERSION__'
+          releaseBody: 'See the assets below to download this version.'
+          releaseDraft: true
+          prerelease: false

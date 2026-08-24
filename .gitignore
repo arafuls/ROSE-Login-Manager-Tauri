@@ -28,3 +28,9 @@ dist-ssr
 .claude/
 CLAUDE.md
 .mcp.json
+
+# Tauri updater signing key - generated via `tauri signer generate`, should
+# live in ~/.tauri/ (outside the repo) per the setup instructions, but this
+# is a defensive backstop in case one ever ends up in-tree.
+*.key
+.tauri/

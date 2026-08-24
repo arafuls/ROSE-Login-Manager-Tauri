@@ -1,4 +1,4 @@
-import { FolderSearch, LoaderCircle, Wand2 } from "lucide-react";
+import { FolderSearch, LoaderCircle, RefreshCw, Wand2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { appGetVersion } from "@/features/app-update/api";
+import { useManualUpdateCheck } from "@/features/app-update/use-app-update";
 import {
   settingsBrowseGameFolder,
   settingsFindGameFolder,
@@ -38,12 +40,18 @@ export function SettingsPage() {
   const [locating, setLocating] = useState(false);
   const [browsing, setBrowsing] = useState(false);
   const [changePassphraseOpen, setChangePassphraseOpen] = useState(false);
+  const [version, setVersion] = useState<string | null>(null);
+  const { checking, checkNow } = useManualUpdateCheck();
   // The game folder Input is controlled from this, not directly from
   // `settings.roseGameFolder` - a plain `defaultValue` only applies once on
   // mount, so a value set by Find automatically/Browse (which update
   // `settings` after the fact) would never visibly appear in the field even
   // though it was actually saved. Synced below whenever `settings` changes.
   const [folderInput, setFolderInput] = useState("");
+
+  useEffect(() => {
+    appGetVersion().then(setVersion);
+  }, []);
 
   useEffect(() => {
     setFolderInput(settings?.roseGameFolder ?? "");
@@ -100,11 +108,31 @@ export function SettingsPage() {
 
   return (
     <div className="mx-auto max-w-2xl space-y-6 p-6">
-      <div>
-        <h1 className="font-semibold text-2xl">Settings</h1>
-        <p className="text-muted-foreground text-sm">
-          Configure your ROSE Online client and login manager preferences.
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="font-semibold text-2xl">Settings</h1>
+          <p className="text-muted-foreground text-sm">
+            Configure your ROSE Online client and login manager preferences.
+          </p>
+        </div>
+        <div className="flex shrink-0 items-center gap-2">
+          {version && (
+            <span className="text-muted-foreground text-xs">v{version}</span>
+          )}
+          <Button
+            disabled={checking}
+            onClick={checkNow}
+            size="sm"
+            variant="ghost"
+          >
+            {checking ? (
+              <LoaderCircle className="size-4 animate-spin" />
+            ) : (
+              <RefreshCw className="size-4" />
+            )}
+            Check for updates
+          </Button>
+        </div>
       </div>
 
       <Card>
