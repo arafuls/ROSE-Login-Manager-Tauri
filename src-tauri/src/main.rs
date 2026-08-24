@@ -9,6 +9,7 @@ mod models;
 mod rose_update;
 mod settings;
 mod state;
+mod theme;
 mod win32_window;
 
 use std::sync::Mutex;
@@ -68,6 +69,11 @@ fn main() {
             commands::settings::settings_update,
             commands::settings::settings_find_game_folder,
             commands::news::news_fetch,
+            commands::theme::theme_list,
+            commands::theme::theme_save,
+            commands::theme::theme_delete,
+            commands::theme::theme_export_to_file,
+            commands::theme::theme_import_from_file,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

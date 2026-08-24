@@ -86,6 +86,27 @@ pub struct Settings {
     pub launch_client_behind: bool,
     pub skip_planet_cutscene: bool,
     pub login_screen: LoginScreen,
+    /// `Theme.id` of the currently active theme - always a real id, never
+    /// null/absent, because `"rose-default"` (see `crate::theme`) is itself
+    /// a valid id for the built-in palette. Keeping this non-nullable means
+    /// the patch field below is a plain `Option<String>` like every other
+    /// scalar setting, with none of `rose_game_folder`'s `double_option`
+    /// machinery needed to represent "explicitly reset."
+    ///
+    /// `#[serde(default)]` matters here beyond the "file doesn't exist yet"
+    /// case that `Settings::default()` covers: an existing `settings.toml`
+    /// written before this field existed has every *other* field but this
+    /// one - without a per-field default, deserializing it fails outright
+    /// (`settings_get` errors, and every caller of `useSettings()` -
+    /// including `profile-list.tsx`, which gates its whole list render on
+    /// `settings` being non-null - gets stuck with `loading`/`settings`
+    /// never resolving).
+    #[serde(default = "default_active_theme_id")]
+    pub active_theme_id: String,
+}
+
+fn default_active_theme_id() -> String {
+    crate::theme::ROSE_DEFAULT_THEME_ID.to_string()
 }
 
 impl Default for Settings {
@@ -97,6 +118,7 @@ impl Default for Settings {
             launch_client_behind: false,
             skip_planet_cutscene: false,
             login_screen: LoginScreen::Random,
+            active_theme_id: crate::theme::ROSE_DEFAULT_THEME_ID.to_string(),
         }
     }
 }
@@ -131,6 +153,8 @@ pub struct SettingsPatch {
     pub skip_planet_cutscene: Option<bool>,
     #[serde(default)]
     pub login_screen: Option<LoginScreen>,
+    #[serde(default)]
+    pub active_theme_id: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -179,4 +203,68 @@ pub struct NewsItem {
     /// `None` if a post genuinely has no thumbnail - handled explicitly
     /// on the frontend rather than falling back to an empty string.
     pub thumbnail: Option<String>,
+}
+
+/// Every themeable color token, deliberately excluding `--radius` and the
+/// font variables (out of scope - this is a color theme editor, not a full
+/// design-system editor) and the `--chart-*`/`--sidebar-*` tokens (confirmed
+/// dead: referenced nowhere outside `global.css` itself). Values are raw CSS
+/// color strings (hex, `oklch()`, etc.), stored and passed through opaquely -
+/// Rust never parses or validates them, that happens client-side via
+/// `CSS.supports('color', value)` before a save/import is ever sent here.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ThemeColors {
+    pub background: String,
+    pub foreground: String,
+    pub card: String,
+    pub card_foreground: String,
+    pub popover: String,
+    pub popover_foreground: String,
+    pub primary: String,
+    pub primary_foreground: String,
+    pub secondary: String,
+    pub secondary_foreground: String,
+    pub muted: String,
+    pub muted_foreground: String,
+    pub accent: String,
+    pub accent_foreground: String,
+    pub destructive: String,
+    pub border: String,
+    pub input: String,
+    pub ring: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Theme {
+    pub id: String,
+    pub name: String,
+    pub colors: ThemeColors,
+    /// True only for the synthesized `"rose-default"` entry - never
+    /// persisted in `themes.json`, never true for a user-created theme.
+    /// Lets the frontend disable Edit/Delete without hardcoding the
+    /// reserved id string.
+    pub built_in: bool,
+}
+
+/// `theme_save`'s payload: `id: None` creates a new theme, `id: Some(id)`
+/// updates an existing one in place.
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ThemeInput {
+    #[serde(default)]
+    pub id: Option<String>,
+    pub name: String,
+    pub colors: ThemeColors,
+}
+
+/// The export/import file shape - deliberately just `name` + `colors`, with
+/// no `id`/`builtIn`, so importing a file always mints a fresh local id
+/// rather than trusting (and potentially colliding with) one from outside.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ThemePortable {
+    pub name: String,
+    pub colors: ThemeColors,
 }

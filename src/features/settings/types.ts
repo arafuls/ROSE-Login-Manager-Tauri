@@ -10,6 +10,7 @@ export const LOGIN_SCREEN_OPTIONS = [
 export type LoginScreen = (typeof LOGIN_SCREEN_OPTIONS)[number];
 
 export interface Settings {
+  activeThemeId: string;
   displayEmail: boolean;
   launchClientBehind: boolean;
   loginScreen: LoginScreen;

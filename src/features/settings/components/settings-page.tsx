@@ -30,6 +30,7 @@ import {
 } from "@/features/settings/types";
 import { useSettings } from "@/features/settings/use-settings";
 import { isBackendError } from "@/lib/tauri-errors";
+import { AppearanceCard } from "./appearance-card";
 
 export function SettingsPage() {
   const { settings, loading } = useSettings();
@@ -230,6 +231,8 @@ export function SettingsPage() {
           </div>
         </CardContent>
       </Card>
+
+      <AppearanceCard />
     </div>
   );
 }

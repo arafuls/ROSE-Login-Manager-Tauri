@@ -45,6 +45,9 @@ pub enum AppError {
     #[error("export bundle is malformed or was encrypted with a different password")]
     InvalidExportBundle,
 
+    #[error("no theme found with that id")]
+    ThemeNotFound,
+
     #[error("filesystem error: {0}")]
     Io(String),
 
@@ -73,6 +76,7 @@ impl AppError {
             AppError::GameExecutableNotFound => "game_executable_not_found",
             AppError::AlreadyRunning => "already_running",
             AppError::InvalidExportBundle => "invalid_export_bundle",
+            AppError::ThemeNotFound => "theme_not_found",
             AppError::Io(_) => "io_error",
             AppError::Db(_) => "db_error",
             AppError::Crypto(_) => "crypto_error",
