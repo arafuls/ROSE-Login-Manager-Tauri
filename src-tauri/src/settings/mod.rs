@@ -5,6 +5,8 @@
 
 pub mod registry;
 pub mod rose_toml;
+#[cfg(not(windows))]
+mod wine_prefix;
 
 use std::fs;
 use std::path::Path;

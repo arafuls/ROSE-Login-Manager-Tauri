@@ -35,9 +35,12 @@ function runWindowCommand(action: () => Promise<void>, label: string) {
  * authenticated app alike.
  *
  * Known tradeoff of going fully custom: this app loses the OS's own
- * drop-shadow/rounded-corner treatment and native Aero Snap/window-menu
- * integration on Windows. Accepted for a consistent cross-platform look,
- * same tradeoff apps like VS Code and Discord make.
+ * drop-shadow treatment and native Aero Snap/window-menu integration on
+ * Windows. Accepted for a consistent cross-platform look, same tradeoff
+ * apps like VS Code and Discord make. Corner rounding itself is restored
+ * via CSS (transparent window + rounded/clipped wrapper in
+ * src/app/index.tsx) rather than relying on the OS's own treatment, since
+ * that's Windows-only (DWM) and wouldn't render on Linux.
  */
 export function TitleBar() {
   const [isMaximized, setIsMaximized] = useState(false);

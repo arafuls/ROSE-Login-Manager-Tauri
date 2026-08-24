@@ -5,12 +5,18 @@
 //! top-level window (it doesn't exist the instant the process spawns), then
 //! `SetWindowPos` it directly behind this app's window.
 
+use tauri::AppHandle;
+
+#[cfg(windows)]
 use std::thread;
+#[cfg(windows)]
 use std::time::Duration;
+#[cfg(windows)]
+use tauri::Manager;
 
-use tauri::{AppHandle, Manager};
-
+#[cfg(windows)]
 const MAX_POLL_ATTEMPTS: u32 = 50;
+#[cfg(windows)]
 const POLL_INTERVAL: Duration = Duration::from_millis(100);
 
 #[cfg(windows)]

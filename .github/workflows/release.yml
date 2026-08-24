@@ -12,13 +12,19 @@ jobs:
   publish-tauri:
     permissions:
       contents: write
-    # Windows only - this app's own dependencies (winreg, the windows
-    # crate for Win32 window APIs) aren't behind any target_os cfg gate,
-    # so it only ever compiles on Windows regardless of what a build
-    # matrix here might attempt.
-    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [windows-latest, ubuntu-22.04]
+    runs-on: ${{ matrix.platform }}
     steps:
       - uses: actions/checkout@v4
+
+      - name: install Linux build dependencies
+        if: matrix.platform == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf xdg-utils
 
       - name: install bun
         uses: oven-sh/setup-bun@v2

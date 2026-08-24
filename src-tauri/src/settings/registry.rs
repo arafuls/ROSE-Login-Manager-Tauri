@@ -1,4 +1,9 @@
-//! Windows Registry lookup for the ROSE Online install folder.
+//! Windows Registry lookup for the ROSE Online install folder, plus the
+//! non-Windows entry point that delegates to `wine_prefix`'s bounded probe.
+//! `find_game_folder` is the one function both `settings::load` (first-run
+//! auto-detect) and the `settings_find_game_folder` command call - keeping
+//! it as the single platform-dispatch point means neither caller needs to
+//! know which platform it's running on.
 //!
 //! The old WPF app (`GlobalVariables.InstallLocationFromRegistry`) only checked
 //! `HKEY_LOCAL_MACHINE`. That's a bug: a per-user install of the game (no admin
@@ -7,8 +12,10 @@
 //! checks both hives, preferring `HKLM` (matching prior behavior) and falling back
 //! to `HKCU`.
 
+#[cfg(windows)]
 const UNINSTALL_SUBKEY: &str =
     r"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{975CAD98-4A32-4E44-8681-29A2C4BE0B93}_is1";
+#[cfg(windows)]
 const VALUE_NAME: &str = "InstallLocation";
 
 #[cfg(windows)]
@@ -31,9 +38,9 @@ pub fn find_game_folder() -> Option<String> {
 
 #[cfg(not(windows))]
 pub fn find_game_folder() -> Option<String> {
-    // The game and this launcher are Windows-only; on any other target (e.g. running
-    // `cargo check` on a non-Windows dev machine / CI) there's no registry to query.
-    None
+    // No registry to query on this platform - delegate to the bounded
+    // Wine-prefix probe instead.
+    super::wine_prefix::find_game_folder()
 }
 
 #[cfg(all(test, windows))]

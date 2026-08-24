@@ -1,3 +1,4 @@
+import { platform } from "@tauri-apps/plugin-os";
 import { FolderSearch, LoaderCircle, RefreshCw, Wand2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -34,6 +35,17 @@ import { useSettings } from "@/features/settings/use-settings";
 import { ChangePassphraseDialog } from "@/features/vault/components/change-passphrase-dialog";
 import { isBackendError } from "@/lib/tauri-errors";
 import { AppearanceCard } from "./appearance-card";
+
+/**
+ * On Windows the game runs natively; everywhere else it runs through Wine
+ * (see src-tauri/src/wine.rs), so a real install lives under a Wine
+ * prefix's `drive_c`, not a Windows-style root - showing a `C:\...`
+ * placeholder on Linux/macOS was actively misleading about where to look.
+ */
+const GAME_FOLDER_PLACEHOLDER =
+  platform() === "windows"
+    ? String.raw`C:\Program Files\Rednim Games\ROSE Online`
+    : "~/.wine/drive_c/Program Files/ROSE Online";
 
 export function SettingsPage() {
   const { settings, loading } = useSettings();
@@ -163,7 +175,7 @@ export function SettingsPage() {
           <Input
             onBlur={(e) => persist({ roseGameFolder: e.target.value || null })}
             onChange={(e) => setFolderInput(e.target.value)}
-            placeholder="C:\Program Files (x86)\Rednim Games\ROSE Online"
+            placeholder={GAME_FOLDER_PLACEHOLDER}
             value={folderInput}
           />
           <Button
@@ -183,12 +195,12 @@ export function SettingsPage() {
           <Button
             disabled={locating}
             onClick={handleFindAutomatically}
-            title="Find automatically"
+            title="Find automagically"
             type="button"
             variant="outline"
           >
             {locating ? <LoaderCircle className="animate-spin" /> : <Wand2 />}
-            Find automatically
+            Find automagically
           </Button>
         </CardContent>
       </Card>

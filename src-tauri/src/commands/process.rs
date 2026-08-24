@@ -26,7 +26,6 @@ use std::time::Duration;
 use serde::Serialize;
 use tauri::{AppHandle, Emitter, Manager, State};
 use tauri_plugin_shell::process::CommandEvent;
-use tauri_plugin_shell::ShellExt;
 
 use crate::crypto;
 use crate::db::profiles;
@@ -36,6 +35,7 @@ use crate::rose_update::sync::{sync_game_files, verify_game_files};
 use crate::settings;
 use crate::state::AppState;
 use crate::win32_window;
+use crate::wine;
 
 const PROFILES_CHANGED_EVENT: &str = "profiles-changed";
 const LAUNCH_STATUS_EVENT: &str = "client-launch-status";
@@ -99,6 +99,31 @@ fn to_app_error(err: anyhow::Error) -> AppError {
     AppError::Internal(format!("{err:#}"))
 }
 
+/// Shared by `profiles_launch`/`client_launch_default` - both need the same
+/// exe-existence check and command spawn, differing only in which
+/// arguments they pass. `wine::build_launch_command` handles the Windows-
+/// vs-Wine branching so this function doesn't need to know or care which
+/// platform it's running on.
+fn spawn_trose(
+    app: &AppHandle,
+    game_folder_path: &Path,
+    args: &[&str],
+) -> AppResult<(
+    tauri::async_runtime::Receiver<CommandEvent>,
+    tauri_plugin_shell::process::CommandChild,
+)> {
+    let exe_path = game_folder_path.join("trose.exe");
+    if !exe_path.exists() {
+        return Err(AppError::GameExecutableNotFound);
+    }
+
+    wine::build_launch_command(app, &exe_path)?
+        .current_dir(game_folder_path)
+        .args(args)
+        .spawn()
+        .map_err(|e| AppError::Internal(format!("failed to launch trose.exe: {e}")))
+}
+
 #[tauri::command]
 pub async fn profiles_launch(
     email: String,
@@ -143,16 +168,10 @@ pub async fn profiles_launch(
     .map_err(to_app_error)?;
     emit_status(&app, "profile", false, &progress);
 
-    let exe_path = game_folder_path.join("trose.exe");
-    if !exe_path.exists() {
-        return Err(AppError::GameExecutableNotFound);
-    }
-
-    let (mut rx, child) = app
-        .shell()
-        .command(exe_path.to_string_lossy().to_string())
-        .current_dir(game_folder_path)
-        .args([
+    let (mut rx, child) = spawn_trose(
+        &app,
+        game_folder_path,
+        &[
             "--login",
             "--server",
             LOGIN_SERVER,
@@ -160,9 +179,8 @@ pub async fn profiles_launch(
             email.as_str(),
             "--password",
             password.as_str(),
-        ])
-        .spawn()
-        .map_err(|e| AppError::Internal(format!("failed to launch trose.exe: {e}")))?;
+        ],
+    )?;
 
     {
         let conn = state.db.lock().unwrap();
@@ -226,18 +244,11 @@ pub async fn client_launch_default(state: State<'_, AppState>, app: AppHandle) -
     .map_err(to_app_error)?;
     emit_status(&app, "default", false, &progress);
 
-    let exe_path = game_folder_path.join("trose.exe");
-    if !exe_path.exists() {
-        return Err(AppError::GameExecutableNotFound);
-    }
-
-    let (mut rx, child) = app
-        .shell()
-        .command(exe_path.to_string_lossy().to_string())
-        .current_dir(game_folder_path)
-        .args(["--login", "--server", LOGIN_SERVER])
-        .spawn()
-        .map_err(|e| AppError::Internal(format!("failed to launch trose.exe: {e}")))?;
+    let (mut rx, child) = spawn_trose(
+        &app,
+        game_folder_path,
+        &["--login", "--server", LOGIN_SERVER],
+    )?;
 
     if current_settings.launch_client_behind {
         let behind_app = app.clone();

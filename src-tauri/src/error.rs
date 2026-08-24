@@ -39,6 +39,13 @@ pub enum AppError {
     #[error("trose.exe was not found in the configured game folder")]
     GameExecutableNotFound,
 
+    // Only ever constructed on non-Windows builds (`wine::build_launch_command`'s
+    // `#[cfg(not(windows))]` branch) - genuinely unreachable dead code on Windows,
+    // not a bug, so the lint is silenced only for that target.
+    #[cfg_attr(windows, allow(dead_code))]
+    #[error("Wine is required to launch ROSE Online on this platform - install it via your distro's package manager (e.g. `sudo apt install wine`)")]
+    WineNotFound,
+
     #[error("this profile's client is already running")]
     AlreadyRunning,
 
@@ -74,6 +81,7 @@ impl AppError {
             AppError::ProfileNotFound => "profile_not_found",
             AppError::GameFolderNotSet => "game_folder_not_set",
             AppError::GameExecutableNotFound => "game_executable_not_found",
+            AppError::WineNotFound => "wine_not_found",
             AppError::AlreadyRunning => "already_running",
             AppError::InvalidExportBundle => "invalid_export_bundle",
             AppError::ThemeNotFound => "theme_not_found",

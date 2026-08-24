@@ -107,7 +107,7 @@
     @apply h-full overscroll-none;
   }
   body {
-    @apply bg-background font-sans text-foreground;
+    @apply font-sans text-foreground;
   }
 
   h1,

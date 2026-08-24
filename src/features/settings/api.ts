@@ -4,6 +4,7 @@
  * replaced if you need the earlier in-memory version for reference.
  */
 import { invoke } from "@tauri-apps/api/core";
+import { open } from "@tauri-apps/plugin-dialog";
 import type { Settings, SettingsPatch } from "./types";
 
 export function settingsGet(): Promise<Settings> {
@@ -45,22 +46,14 @@ export function settingsFindGameFolder(): Promise<string | null> {
 }
 
 /**
- * DEVIATION from the contract, unchanged from the mock: there is no
- * `settings_browse_game_folder` command because a native folder picker is a
- * Tauri *plugin* call (`@tauri-apps/plugin-dialog`'s `open({ directory: true
- * })`), not an app-defined command - it never touches Rust business logic.
- * `@tauri-apps/plugin-dialog` isn't registered on the Rust side yet (it's
- * new scope beyond wiring the existing Phase 1 contract), so this still
- * prompts rather than showing a native dialog. Swap this body for the real
- * plugin call when that's added.
+ * DEVIATION from the contract: there is no `settings_browse_game_folder`
+ * command because a native folder picker is a Tauri *plugin* call
+ * (`@tauri-apps/plugin-dialog`'s `open({ directory: true })`), not an
+ * app-defined command - it never touches Rust business logic. Native and
+ * cross-platform by construction (the real Windows folder dialog, GTK's
+ * chooser on Linux, Finder-style on macOS), same plugin already used for
+ * theme import/export and profile import.
  */
 export function settingsBrowseGameFolder(): Promise<string | null> {
-  // biome-ignore lint/suspicious/noAlert: temporary stand-in for a native folder dialog until plugin-dialog is wired up, see comment above.
-  const picked = globalThis.prompt(
-    "Folder picker not wired up yet - paste the ROSE Online install path:",
-    ""
-  );
-  return Promise.resolve(
-    picked && picked.trim().length > 0 ? picked.trim() : null
-  );
+  return open({ directory: true });
 }

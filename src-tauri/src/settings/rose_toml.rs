@@ -9,6 +9,11 @@
 //! Two of our settings are mirrored into it so the game client picks them up:
 //! `skip_planet_cutscene` (`[game] skip_planet_cutscene`, a bool) and `login_screen`
 //! (`[game] title_map_id`, an int - see `LoginScreen::title_map_id`).
+//!
+//! On non-Windows, the game runs under Wine (see `wine.rs`), so its `AppData\Roaming`
+//! is resolved via `wine_prefix::appdata_roaming_dir` (a Wine-prefix equivalent of
+//! `dirs::config_dir()`), not our own native `~/.config`, which is a different folder
+//! entirely and would silently never match a real `rose.toml`.
 
 use std::fs;
 use std::path::PathBuf;
@@ -16,10 +21,24 @@ use std::path::PathBuf;
 use crate::error::{AppError, AppResult};
 use crate::models::LoginScreen;
 
-/// Resolves the path to the game's `rose.toml`, or `None` if we can't determine the
-/// user's roaming AppData folder at all (should not happen on a real Windows install).
+/// Resolves the path to the game's `rose.toml`, or `None` if we can't determine its
+/// `AppData\Roaming` folder at all (should not happen on a real Windows install; on
+/// non-Windows, happens whenever there's no Wine prefix to probe yet).
+#[cfg(windows)]
 pub fn rose_toml_path() -> Option<PathBuf> {
     let appdata = dirs::config_dir()?; // %APPDATA% on Windows
+    Some(
+        appdata
+            .join("Rednim Games")
+            .join("ROSE Online")
+            .join("config")
+            .join("rose.toml"),
+    )
+}
+
+#[cfg(not(windows))]
+pub fn rose_toml_path() -> Option<PathBuf> {
+    let appdata = super::wine_prefix::appdata_roaming_dir()?;
     Some(
         appdata
             .join("Rednim Games")
