@@ -105,8 +105,6 @@ Architecture follows [bulletproof-react](https://github.com/alan2207/bulletproof
 feature-based structure on the frontend (`src/features/<feature>/{components,api,types}`), with a
 matching `#[tauri::command]` module per feature on the Rust side
 (`src-tauri/src/commands/{vault,profiles,settings,process,theme,news}.rs`).
-`docs/command-contract.md` is the authoritative list of every command, its types, and its error
-variants — kept in sync with the Rust implementation by hand, not generated.
 
 ## Project structure
 
@@ -140,8 +138,6 @@ src-tauri/                    Rust backend
 │   ├── win32_window.rs         "Launch behind" window positioning (Windows only)
 │   └── models.rs, error.rs    Shared DTOs and the AppError type
 └── tauri.conf.json
-
-docs/command-contract.md      Full command/type/error reference, source of truth
 ```
 
 ## Getting started

@@ -29,6 +29,9 @@ dist-ssr
 CLAUDE.md
 .mcp.json
 
+# Local-only engineering reference, not meant for the public repo
+docs/command-contract.md
+
 # Tauri updater signing key - generated via `tauri signer generate`, should
 # live in ~/.tauri/ (outside the repo) per the setup instructions, but this
 # is a defensive backstop in case one ever ends up in-tree.
