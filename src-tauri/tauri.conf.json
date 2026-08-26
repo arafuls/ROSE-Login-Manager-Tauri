@@ -39,7 +39,7 @@
         "title": "ROSE Login Manager",
         "width": 900,
         "height": 650,
-        "minWidth": 900,
+        "minWidth": 550,
         "minHeight": 600,
         "dragDropEnabled": false,
         "decorations": false,
