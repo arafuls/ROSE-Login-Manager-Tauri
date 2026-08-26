@@ -131,6 +131,12 @@ pub struct Settings {
     pub linux_launch_mode: LinuxLaunchMode,
     #[serde(default)]
     pub nav_style: NavStyle,
+    /// Whether the Home screen shows the News panel alongside the profile
+    /// list. Defaults to `true` (matches current shipped behavior) - see
+    /// `default_true`'s doc comment for why a dedicated default function is
+    /// needed for a `bool` field that isn't just `false`.
+    #[serde(default = "default_true")]
+    pub show_news_panel: bool,
     /// `Theme.id` of the currently active theme - always a real id, never
     /// null/absent, because `"rose-default"` (see `crate::theme`) is itself
     /// a valid id for the built-in palette. Keeping this non-nullable means
@@ -156,6 +162,14 @@ fn default_active_theme_id() -> String {
     crate::theme::ROSE_DEFAULT_THEME_ID.to_string()
 }
 
+/// Fallback for `Settings::show_news_panel` - `#[serde(default)]` alone
+/// would use `bool::default()` (`false`), which would silently hide the
+/// news panel for every existing install's `settings.toml` predating this
+/// field instead of preserving its current on-by-default behavior.
+fn default_true() -> bool {
+    true
+}
+
 impl Default for Settings {
     fn default() -> Self {
         Settings {
@@ -167,6 +181,7 @@ impl Default for Settings {
             login_screen: LoginScreen::Random,
             linux_launch_mode: LinuxLaunchMode::Wine,
             nav_style: NavStyle::Sidebar,
+            show_news_panel: true,
             active_theme_id: crate::theme::ROSE_DEFAULT_THEME_ID.to_string(),
         }
     }
@@ -207,6 +222,8 @@ pub struct SettingsPatch {
     pub linux_launch_mode: Option<LinuxLaunchMode>,
     #[serde(default)]
     pub nav_style: Option<NavStyle>,
+    #[serde(default)]
+    pub show_news_panel: Option<bool>,
     #[serde(default)]
     pub active_theme_id: Option<String>,
 }

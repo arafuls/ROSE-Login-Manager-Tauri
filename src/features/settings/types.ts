@@ -35,6 +35,7 @@ export interface Settings {
   maskEmail: boolean;
   navStyle: NavStyle;
   roseGameFolder: string | null;
+  showNewsPanel: boolean;
   skipPlanetCutscene: boolean;
 }
 

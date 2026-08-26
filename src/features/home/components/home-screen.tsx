@@ -22,6 +22,7 @@ import {
 } from "@/features/updater/api";
 import { LaunchStatusBar } from "@/features/updater/components/launch-status-bar";
 import { isBackendError } from "@/lib/tauri-errors";
+import { cn } from "@/lib/utils";
 
 /** Renders the screen described in the file header. */
 export function HomeScreen() {
@@ -75,9 +76,16 @@ export function HomeScreen() {
     }
   };
 
+  const showNews = settings?.showNewsPanel ?? true;
+
   return (
     <div className="flex h-full flex-col gap-4 p-6">
-      <div className="grid min-h-0 flex-1 grid-cols-[320px_1fr] gap-4">
+      <div
+        className={cn(
+          "grid min-h-0 flex-1 gap-4",
+          showNews ? "grid-cols-[320px_1fr]" : "grid-cols-1"
+        )}
+      >
         <div className="flex min-h-0 flex-col gap-2 overflow-y-auto overflow-x-hidden px-1">
           {loading && (
             <div className="flex h-40 items-center justify-center">
@@ -121,11 +129,16 @@ export function HomeScreen() {
           )}
         </div>
 
-        <NewsPanel />
+        {showNews && <NewsPanel />}
       </div>
 
-      <div className="grid grid-cols-[320px_1fr] gap-4">
-        <div />
+      <div
+        className={cn(
+          "grid gap-4",
+          showNews ? "grid-cols-[320px_1fr]" : "grid-cols-1"
+        )}
+      >
+        {showNews && <div />}
         <div className="space-y-2">
           <LaunchStatusBar />
           <div className="flex items-center justify-end gap-2">

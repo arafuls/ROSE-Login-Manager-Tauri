@@ -293,6 +293,12 @@ export function SettingsPage() {
               persist({ launchClientBehind: checked })
             }
           />
+          <SettingRow
+            checked={settings.showNewsPanel}
+            description="Shows the News panel next to your profile list on the Home screen."
+            label="Show news panel"
+            onCheckedChange={(checked) => persist({ showNewsPanel: checked })}
+          />
         </CardContent>
       </Card>
 
