@@ -1,6 +1,6 @@
 {
   "name": "rose-login-manager",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "ROSE Online Login Manager (Tauri + Rust + React rewrite)",
   "type": "module",
   "scripts": {
