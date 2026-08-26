@@ -12,6 +12,7 @@ mod error;
 mod models;
 #[cfg(not(windows))]
 mod native_launch;
+mod os_credential;
 mod rose_update;
 mod settings;
 mod state;
@@ -64,6 +65,10 @@ fn main() {
             commands::vault::vault_reset,
             commands::vault::vault_is_unlocked,
             commands::vault::vault_lock,
+            commands::vault::vault_stay_unlocked_is_enabled,
+            commands::vault::vault_enable_stay_unlocked,
+            commands::vault::vault_disable_stay_unlocked,
+            commands::vault::vault_resume_from_os,
             commands::profiles::profiles_list,
             commands::profiles::profiles_create,
             commands::profiles::profiles_update,

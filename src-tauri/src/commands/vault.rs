@@ -1,36 +1,28 @@
-//! `vault_*` commands: passphrase-based unlock for the encrypted profile store,
-//! with a recovery key as a second, independent way to unlock it.
+//! `vault_*` commands: Passphrase-based unlock for the encrypted profile store,
+//! backed by a recovery key and an optional OS-protected (DPAPI) session cache.
 //!
-//! No passphrase, recovery key, or the derived DEK itself is ever persisted.
-//! `vault_setup` generates a random DEK and stores it wrapped (encrypted)
-//! under two independently-derived keys - one from the passphrase, one from
-//! a freshly generated recovery key shown to the user exactly once. Either
-//! wrapping can be unwrapped to recover the same DEK: `vault_unlock` uses the
-//! passphrase-wrapped copy, `vault_recover` uses the recovery-key-wrapped
-//! copy (and re-wraps the DEK under a new passphrase in the same step, since
-//! recovery only happens when the old passphrase is gone). If both are lost,
-//! `vault_reset` is the only way out - there is no backdoor.
+//! DEKs are never persisted in plaintext. They are stored wrapped under both a 
+//! passphrase-derived key and an independent recovery key. If both are lost, 
+//! `vault_reset` is the only recovery path.
 
 use tauri::State;
 
 use crate::crypto;
-use crate::db::vault_meta;
+use crate::db::{vault_meta, vault_session};
 use crate::error::{AppError, AppResult};
 use crate::models::VaultSetupResult;
+use crate::os_credential;
 use crate::state::AppState;
 
-/// Whether `vault_setup` has ever run - drives whether the frontend shows
-/// the first-run setup screen or the unlock screen.
+/// Checks if `vault_setup` has run to direct the frontend layout.
 #[tauri::command]
 pub fn vault_is_initialized(state: State<AppState>) -> AppResult<bool> {
     let conn = state.db.lock().unwrap();
     vault_meta::is_initialized(&conn)
 }
 
-/// First-run only: generates the DEK, wraps it under both the passphrase
-/// and a freshly generated recovery key, persists both wrappings, and
-/// unlocks the vault for this session. Returns the recovery key so the
-/// frontend can show it exactly once (see [`VaultSetupResult`]).
+/// Generates a new DEK, wraps it using both the passphrase and a new recovery key,
+/// persists the wrappings, and unlocks the session. Returns the recovery key.
 #[tauri::command]
 pub fn vault_setup(passphrase: String, state: State<AppState>) -> AppResult<VaultSetupResult> {
     let conn = state.db.lock().unwrap();
@@ -39,6 +31,9 @@ pub fn vault_setup(passphrase: String, state: State<AppState>) -> AppResult<Vaul
         return Err(AppError::VaultAlreadyInitialized);
     }
     crypto::validate_passphrase_len(&passphrase)?;
+
+    // Clear stale session rows left behind by non-transactional resets.
+    vault_session::clear(&conn)?;
 
     let dek = crypto::generate_dek();
 
@@ -67,8 +62,7 @@ pub fn vault_setup(passphrase: String, state: State<AppState>) -> AppResult<Vaul
     Ok(VaultSetupResult { recovery_key })
 }
 
-/// Unlocks with the vault's passphrase, storing the recovered DEK in
-/// session state for `crypto::encrypt`/`decrypt` calls elsewhere to use.
+/// Unlocks the vault via passphrase and loads the DEK into session memory.
 #[tauri::command]
 pub fn vault_unlock(passphrase: String, state: State<AppState>) -> AppResult<()> {
     let conn = state.db.lock().unwrap();
@@ -76,8 +70,6 @@ pub fn vault_unlock(passphrase: String, state: State<AppState>) -> AppResult<()>
     let meta = vault_meta::load(&conn)?.ok_or(AppError::VaultNotInitialized)?;
     let key = crypto::derive_key(&passphrase, &meta.passphrase_salt)?;
 
-    // A decrypt failure here means the AEAD tag didn't authenticate, i.e. the
-    // derived key is wrong, i.e. the passphrase was wrong.
     let dek_bytes = crypto::decrypt(&key, &meta.wrapped_dek_by_passphrase)
         .map_err(|_| AppError::WrongPassphrase)?;
     let dek = to_vault_key(dek_bytes)?;
@@ -86,12 +78,8 @@ pub fn vault_unlock(passphrase: String, state: State<AppState>) -> AppResult<()>
     Ok(())
 }
 
-/// Unlocks using the one-time recovery key shown at setup, then immediately
-/// re-wraps the recovered DEK under `new_passphrase` - recovery only ever
-/// happens because the old passphrase is gone, so there's no reason to make
-/// the user unlock once with the recovery key and separately go set a new
-/// passphrase afterward. The original recovery key keeps working after this,
-/// since it wraps the same DEK independently of the passphrase wrapping.
+/// Unlocks via recovery key and re-wraps the DEK under `new_passphrase`.
+/// Leaves the original recovery key wrapping intact.
 #[tauri::command]
 pub fn vault_recover(
     recovery_key: String,
@@ -118,14 +106,8 @@ pub fn vault_recover(
     Ok(())
 }
 
-/// Rotates the passphrase while it's still known - unlike `vault_recover`,
-/// this doesn't need the recovery key. Authenticates via `current_passphrase`
-/// (a decrypt failure means it was wrong), then re-wraps the *same* DEK
-/// under a freshly-salted key derived from `new_passphrase`. The recovery-
-/// key wrapping is untouched - it keeps working afterward, same as after
-/// `vault_recover`. `state.vault_key` doesn't need updating: only how the
-/// DEK is wrapped changes, not the DEK itself, so the already-unlocked
-/// session key stays valid.
+/// Re-wraps the DEK under a new passphrase using the current passphrase for auth.
+/// Keeps the DEK and recovery wrapping unchanged.
 #[tauri::command]
 pub fn vault_change_passphrase(
     current_passphrase: String,
@@ -150,34 +132,86 @@ pub fn vault_change_passphrase(
     Ok(())
 }
 
-/// Last resort when both the passphrase and the recovery key are lost: wipes
-/// the vault and every saved profile, returning the app to first-run state.
-/// No confirmation/undo at this layer - the frontend is responsible for
-/// making sure this is a deliberate, hard-to-misclick action.
+/// Wipes all vault data and returns the app to a fresh first-run state.
 #[tauri::command]
 pub fn vault_reset(state: State<AppState>) -> AppResult<()> {
     let conn = state.db.lock().unwrap();
     vault_meta::reset(&conn)?;
+    vault_session::clear(&conn)?;
     *state.vault_key.lock().unwrap() = None;
     Ok(())
 }
 
-/// Whether this session currently has the DEK in memory (i.e. unlocked).
+/// Wipes all vault data and returns the app to a fresh first-run state.
 #[tauri::command]
 pub fn vault_is_unlocked(state: State<AppState>) -> bool {
     state.vault_key.lock().unwrap().is_some()
 }
 
-/// Drops the in-memory DEK, re-locking the vault for this session without
-/// touching anything persisted on disk.
+/// Clears the in-memory DEK and removes any saved OS-protected session blob.
 #[tauri::command]
-pub fn vault_lock(state: State<AppState>) {
+pub fn vault_lock(state: State<AppState>) -> AppResult<()> {
+    let conn = state.db.lock().unwrap();
+    vault_session::clear(&conn)?;
     *state.vault_key.lock().unwrap() = None;
+    Ok(())
 }
 
-/// Converts a decrypted DEK's raw bytes into the fixed-size array type used
-/// everywhere else, surfacing a clear error instead of a panic if a
-/// corrupted wrapping ever decrypts to the wrong length.
+/// Checks if an OS-protected DEK copy is currently saved ("stay unlocked").
+#[tauri::command]
+pub fn vault_stay_unlocked_is_enabled(state: State<AppState>) -> AppResult<bool> {
+    let conn = state.db.lock().unwrap();
+    vault_session::is_enabled(&conn)
+}
+
+/// Confirms the passphrase and saves an OS-protected copy of the DEK for auto-unlock.
+#[tauri::command]
+pub fn vault_enable_stay_unlocked(passphrase: String, state: State<AppState>) -> AppResult<()> {
+    let conn = state.db.lock().unwrap();
+
+    let meta = vault_meta::load(&conn)?.ok_or(AppError::VaultNotInitialized)?;
+    let key = crypto::derive_key(&passphrase, &meta.passphrase_salt)?;
+    let dek_bytes = crypto::decrypt(&key, &meta.wrapped_dek_by_passphrase)
+        .map_err(|_| AppError::WrongPassphrase)?;
+
+    let wrapped_dek_by_os = os_credential::protect(&dek_bytes)?;
+    vault_session::save(&conn, &wrapped_dek_by_os)?;
+    Ok(())
+}
+
+/// Disables "stay unlocked" by removing the OS-protected session blob.
+#[tauri::command]
+pub fn vault_disable_stay_unlocked(state: State<AppState>) -> AppResult<()> {
+    let conn = state.db.lock().unwrap();
+    vault_session::clear(&conn)
+}
+
+/// Unlocks using an OS-protected DEK at startup. Clears invalid/corrupted blobs and returns `false`.
+#[tauri::command]
+pub fn vault_resume_from_os(state: State<AppState>) -> AppResult<bool> {
+    if state.vault_key.lock().unwrap().is_some() {
+        return Ok(true);
+    }
+
+    let conn = state.db.lock().unwrap();
+    let Some(wrapped) = vault_session::load(&conn)? else {
+        return Ok(false);
+    };
+
+    match os_credential::unprotect(&wrapped) {
+        Ok(dek_bytes) => {
+            let dek = to_vault_key(dek_bytes)?;
+            *state.vault_key.lock().unwrap() = Some(dek);
+            Ok(true)
+        }
+        Err(_) => {
+            vault_session::clear(&conn)?;
+            Ok(false)
+        }
+    }
+}
+
+/// Converts raw decrypted DEK bytes into a fixed-size `VaultKey`.
 fn to_vault_key(bytes: Vec<u8>) -> AppResult<crypto::VaultKey> {
     bytes
         .try_into()

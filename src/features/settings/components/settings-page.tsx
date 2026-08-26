@@ -37,6 +37,8 @@ import {
 } from "@/features/settings/types";
 import { useSettings } from "@/features/settings/use-settings";
 import { ChangePassphraseDialog } from "@/features/vault/components/change-passphrase-dialog";
+import { StayUnlockedDialog } from "@/features/vault/components/stay-unlocked-dialog";
+import { useVault } from "@/features/vault/vault-provider";
 import { isBackendError } from "@/lib/tauri-errors";
 import { AppearanceCard } from "./appearance-card";
 
@@ -62,9 +64,11 @@ function gameFolderPlaceholder(linuxLaunchMode: LinuxLaunchMode): string {
 /** Renders the screen described in the file header. */
 export function SettingsPage() {
   const { settings, loading } = useSettings();
+  const { stayUnlockedEnabled, disableStayUnlocked } = useVault();
   const [locating, setLocating] = useState(false);
   const [browsing, setBrowsing] = useState(false);
   const [changePassphraseOpen, setChangePassphraseOpen] = useState(false);
+  const [stayUnlockedOpen, setStayUnlockedOpen] = useState(false);
   const [version, setVersion] = useState<string | null>(null);
   const { checking, checkNow } = useManualUpdateCheck();
   // The game folder Input is controlled from this, not directly from
@@ -168,13 +172,27 @@ export function SettingsPage() {
             Change the passphrase that unlocks your vault.
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
           <Button
             onClick={() => setChangePassphraseOpen(true)}
             variant="outline"
           >
             Change passphrase
           </Button>
+          {platform() === "windows" && (
+            <SettingRow
+              checked={stayUnlockedEnabled}
+              description="Skip your passphrase on future launches. Anyone who can log into this Windows account will be able to open your vault."
+              label="Stay unlocked"
+              onCheckedChange={(checked) => {
+                if (checked) {
+                  setStayUnlockedOpen(true);
+                } else {
+                  disableStayUnlocked();
+                }
+              }}
+            />
+          )}
         </CardContent>
       </Card>
 
@@ -350,6 +368,10 @@ export function SettingsPage() {
       <ChangePassphraseDialog
         onOpenChange={setChangePassphraseOpen}
         open={changePassphraseOpen}
+      />
+      <StayUnlockedDialog
+        onOpenChange={setStayUnlockedOpen}
+        open={stayUnlockedOpen}
       />
     </div>
   );

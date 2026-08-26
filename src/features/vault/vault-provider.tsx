@@ -10,12 +10,15 @@ import {
 } from "react";
 import {
   vaultChangePassphrase,
+  vaultDisableStayUnlocked,
+  vaultEnableStayUnlocked,
   vaultIsInitialized,
-  vaultIsUnlocked,
   vaultLock,
   vaultRecover,
   vaultReset,
+  vaultResumeFromOs,
   vaultSetup,
+  vaultStayUnlockedIsEnabled,
   vaultUnlock,
 } from "./api";
 
@@ -33,6 +36,10 @@ interface VaultContextValue {
   ) => Promise<void>;
   /** Dismisses the recovery-key screen once the user has confirmed they saved it. */
   confirmRecoveryKeySaved: () => void;
+  /** Turns "stay unlocked" back off. */
+  disableStayUnlocked: () => Promise<void>;
+  /** Re-verifies `passphrase`, then persists an OS-protected copy of the DEK. */
+  enableStayUnlocked: (passphrase: string) => Promise<void>;
   lock: () => Promise<void>;
   recover: (recoveryKey: string, newPassphrase: string) => Promise<void>;
   /** Only non-null while status is "show-recovery-key". */
@@ -40,6 +47,8 @@ interface VaultContextValue {
   reset: () => Promise<void>;
   setup: (passphrase: string) => Promise<void>;
   status: VaultStatus;
+  /** Whether an OS-protected DEK is currently persisted (Windows only for now). */
+  stayUnlockedEnabled: boolean;
   unlock: (passphrase: string) => Promise<void>;
 }
 
@@ -49,6 +58,7 @@ const VaultContext = createContext<VaultContextValue | null>(null);
 export function VaultProvider({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<VaultStatus>("checking");
   const [recoveryKey, setRecoveryKey] = useState<string | null>(null);
+  const [stayUnlockedEnabled, setStayUnlockedEnabled] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -61,13 +71,34 @@ export function VaultProvider({ children }: { children: ReactNode }) {
         setStatus("needs-setup");
         return;
       }
-      const unlocked = await vaultIsUnlocked();
+      // A strict superset of vaultIsUnlocked(): checks the in-memory state
+      // first, then falls back to resuming from a persisted OS-protected DEK
+      // (a no-op everywhere "stay unlocked" was never enabled).
+      const unlocked = await vaultResumeFromOs();
       setStatus(unlocked ? "unlocked" : "locked");
     })();
     return () => {
       cancelled = true;
     };
   }, []);
+
+  // Keeps stayUnlockedEnabled in sync with the backend whenever the vault
+  // becomes unlocked, rather than threading a refetch through every action
+  // that can reach "unlocked" (setup/unlock/recover/resume) individually.
+  useEffect(() => {
+    if (status !== "unlocked") {
+      return;
+    }
+    let cancelled = false;
+    vaultStayUnlockedIsEnabled().then((enabled) => {
+      if (!cancelled) {
+        setStayUnlockedEnabled(enabled);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [status]);
 
   const setup = useCallback(async (passphrase: string) => {
     const result = await vaultSetup(passphrase);
@@ -109,9 +140,23 @@ export function VaultProvider({ children }: { children: ReactNode }) {
     setStatus("needs-setup");
   }, []);
 
+  // vaultLock() also clears any persisted "stay unlocked" data server-side
+  // (see its own doc comment) - mirrored here so the Settings toggle doesn't
+  // show stale "on" state after a manual lock.
   const lock = useCallback(async () => {
     await vaultLock();
     setStatus("locked");
+    setStayUnlockedEnabled(false);
+  }, []);
+
+  const enableStayUnlocked = useCallback(async (passphrase: string) => {
+    await vaultEnableStayUnlocked(passphrase);
+    setStayUnlockedEnabled(true);
+  }, []);
+
+  const disableStayUnlocked = useCallback(async () => {
+    await vaultDisableStayUnlocked();
+    setStayUnlockedEnabled(false);
   }, []);
 
   return (
@@ -126,6 +171,9 @@ export function VaultProvider({ children }: { children: ReactNode }) {
         changePassphrase,
         reset,
         lock,
+        stayUnlockedEnabled,
+        enableStayUnlocked,
+        disableStayUnlocked,
       }}
     >
       {children}

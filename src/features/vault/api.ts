@@ -90,7 +90,33 @@ export function vaultIsUnlocked(): Promise<boolean> {
   return invoke("vault_is_unlocked");
 }
 
-/** Re-locks the vault for this session. */
+/** Re-locks the vault for this session and clears any "stay unlocked" data. */
 export async function vaultLock(): Promise<void> {
   await invoke("vault_lock");
+}
+
+/** Whether an OS-protected copy of the DEK is currently persisted ("stay unlocked" is on). */
+export function vaultStayUnlockedIsEnabled(): Promise<boolean> {
+  return invoke("vault_stay_unlocked_is_enabled");
+}
+
+/** Re-verifies the passphrase, then persists an OS-protected copy of the DEK. */
+export async function vaultEnableStayUnlocked(
+  passphrase: string
+): Promise<void> {
+  try {
+    await invoke("vault_enable_stay_unlocked", { passphrase });
+  } catch (error) {
+    throw toVaultError(error);
+  }
+}
+
+/** Turns "stay unlocked" back off. */
+export async function vaultDisableStayUnlocked(): Promise<void> {
+  await invoke("vault_disable_stay_unlocked");
+}
+
+/** Attempts to unlock from a persisted OS-protected DEK, without a passphrase. */
+export function vaultResumeFromOs(): Promise<boolean> {
+  return invoke("vault_resume_from_os");
 }

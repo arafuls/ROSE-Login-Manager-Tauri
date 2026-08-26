@@ -20,6 +20,7 @@
 
 pub mod profiles;
 pub mod vault_meta;
+pub mod vault_session;
 
 use std::path::Path;
 
@@ -57,6 +58,11 @@ fn migrate(conn: &Connection) -> AppResult<()> {
             wrapped_dek_by_passphrase   BLOB NOT NULL,
             recovery_salt               BLOB NOT NULL,
             wrapped_dek_by_recovery     BLOB NOT NULL
+        );
+
+        CREATE TABLE IF NOT EXISTS vault_session (
+            id                  INTEGER PRIMARY KEY CHECK (id = 1),
+            wrapped_dek_by_os   BLOB NOT NULL
         );
         "#,
     )?;
