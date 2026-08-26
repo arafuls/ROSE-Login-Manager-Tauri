@@ -34,28 +34,32 @@ function AppShell() {
   const isTopbar = settings?.navStyle === "Topbar";
 
   const insetRef = useRef<HTMLElement>(null);
-  const prevTopRef = useRef<number | null>(null);
+  const prevScrollHeightRef = useRef<number | null>(null);
 
-  // Switching nav style shifts SidebarInset both vertically (AppTopbar
-  // mounting/unmounting above it) and horizontally (AppSidebar taking or
-  // freeing width) without touching scrollTop, and the width change alone
-  // can reflow the page content to a different height. Anchoring to the
-  // page's own root element - not remounted across this switch, so it's
-  // the same node before and after - captures both effects in one
-  // measurement, rather than only compensating for the container's own
-  // shift and missing whatever the content did in response to it.
-  // biome-ignore lint/correctness/useExhaustiveDependencies: intentionally re-measures only when isTopbar changes (the only thing that shifts this element's own screen position) - the effect reads the DOM directly rather than isTopbar itself.
+  // Switching nav style repositions SidebarInset vertically (AppTopbar
+  // mounting/unmounting above it) - that alone needs no compensation, since
+  // the browser never touches scrollTop just because a sibling above the
+  // scroll container changes size; the same content stays in view, just
+  // physically higher/lower on screen. What *does* need compensating is
+  // AppSidebar taking or freeing horizontal width, which can reflow the
+  // page's own content to a different height. Tracking scrollHeight (not
+  // an anchor element's viewport position, which an earlier version of this
+  // effect used) targets exactly that: scrollHeight only changes from real
+  // content reflow, never from the container's own reposition and never
+  // from the user simply scrolling between switches - both of which threw
+  // off the previous position-based approach, compounding a small drift on
+  // every switch after the first.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentionally re-measures only when isTopbar changes (the only thing that can reflow content height here) - the effect reads the DOM directly rather than isTopbar itself.
   useLayoutEffect(() => {
     const el = insetRef.current;
     if (!el) {
       return;
     }
-    const anchor = el.firstElementChild ?? el;
-    const top = anchor.getBoundingClientRect().top;
-    if (prevTopRef.current !== null) {
-      el.scrollTop += top - prevTopRef.current;
+    const scrollHeight = el.scrollHeight;
+    if (prevScrollHeightRef.current !== null) {
+      el.scrollTop += scrollHeight - prevScrollHeightRef.current;
     }
-    prevTopRef.current = top;
+    prevScrollHeightRef.current = scrollHeight;
   }, [isTopbar]);
 
   return (
