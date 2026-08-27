@@ -181,6 +181,13 @@
   }
 }
 
+/* Overrides the mobile Sidebar Sheet's width - it hardcodes --sidebar-width
+ * inline with no prop passthrough, so !important is the only way to win
+ * without hand-editing the vendored sidebar.tsx. */
+[data-slot="sidebar"][data-mobile="true"] {
+  --sidebar-width: 10rem !important;
+}
+
 /* Sliding indicator for LaunchStatusBar's indeterminate progress bar. */
 @keyframes indeterminate {
   0% {

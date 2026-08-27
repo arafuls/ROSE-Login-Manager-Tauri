@@ -66,6 +66,7 @@ fn main() {
             commands::vault::vault_is_unlocked,
             commands::vault::vault_lock,
             commands::vault::vault_stay_unlocked_is_enabled,
+            commands::vault::vault_stay_unlocked_is_supported,
             commands::vault::vault_enable_stay_unlocked,
             commands::vault::vault_disable_stay_unlocked,
             commands::vault::vault_resume_from_os,

@@ -33,7 +33,7 @@ pub fn vault_setup(passphrase: String, state: State<AppState>) -> AppResult<Vaul
     crypto::validate_passphrase_len(&passphrase)?;
 
     // Clear stale session rows left behind by non-transactional resets.
-    vault_session::clear(&conn)?;
+    clear_stay_unlocked(&conn)?;
 
     let dek = crypto::generate_dek();
 
@@ -137,7 +137,7 @@ pub fn vault_change_passphrase(
 pub fn vault_reset(state: State<AppState>) -> AppResult<()> {
     let conn = state.db.lock().unwrap();
     vault_meta::reset(&conn)?;
-    vault_session::clear(&conn)?;
+    clear_stay_unlocked(&conn)?;
     *state.vault_key.lock().unwrap() = None;
     Ok(())
 }
@@ -152,7 +152,7 @@ pub fn vault_is_unlocked(state: State<AppState>) -> bool {
 #[tauri::command]
 pub fn vault_lock(state: State<AppState>) -> AppResult<()> {
     let conn = state.db.lock().unwrap();
-    vault_session::clear(&conn)?;
+    clear_stay_unlocked(&conn)?;
     *state.vault_key.lock().unwrap() = None;
     Ok(())
 }
@@ -162,6 +162,14 @@ pub fn vault_lock(state: State<AppState>) -> AppResult<()> {
 pub fn vault_stay_unlocked_is_enabled(state: State<AppState>) -> AppResult<bool> {
     let conn = state.db.lock().unwrap();
     vault_session::is_enabled(&conn)
+}
+
+/// Whether this platform's OS-backed storage is reachable right now - gates
+/// whether the frontend offers the toggle. Always `true` on Windows; a real
+/// Secret Service probe on Linux.
+#[tauri::command]
+pub fn vault_stay_unlocked_is_supported() -> bool {
+    os_credential::is_supported()
 }
 
 /// Confirms the passphrase and saves an OS-protected copy of the DEK for auto-unlock.
@@ -183,7 +191,7 @@ pub fn vault_enable_stay_unlocked(passphrase: String, state: State<AppState>) ->
 #[tauri::command]
 pub fn vault_disable_stay_unlocked(state: State<AppState>) -> AppResult<()> {
     let conn = state.db.lock().unwrap();
-    vault_session::clear(&conn)
+    clear_stay_unlocked(&conn)
 }
 
 /// Unlocks using an OS-protected DEK at startup. Clears invalid/corrupted blobs and returns `false`.
@@ -204,11 +212,24 @@ pub fn vault_resume_from_os(state: State<AppState>) -> AppResult<bool> {
             *state.vault_key.lock().unwrap() = Some(dek);
             Ok(true)
         }
+        // Transient (e.g. keyring daemon not started yet), not a dead
+        // secret - don't clear the row, or a momentary hiccup would reset
+        // the setting.
+        Err(AppError::CredentialStoreUnavailable(_)) => Ok(false),
         Err(_) => {
-            vault_session::clear(&conn)?;
+            clear_stay_unlocked(&conn)?;
             Ok(false)
         }
     }
+}
+
+/// Clears "stay unlocked" locally and, where applicable, the OS-side
+/// secret - shared so no call site forgets the OS half.
+/// `os_credential::clear` failures are non-fatal.
+fn clear_stay_unlocked(conn: &rusqlite::Connection) -> AppResult<()> {
+    vault_session::clear(conn)?;
+    let _ = os_credential::clear();
+    Ok(())
 }
 
 /// Converts raw decrypted DEK bytes into a fixed-size `VaultKey`.

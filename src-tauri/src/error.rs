@@ -66,6 +66,13 @@ pub enum AppError {
     #[error("cryptographic error: {0}")]
     Crypto(String),
 
+    // Linux-only: a transiently unreachable keyring, not a dead secret -
+    // `vault_resume_from_os` handles it separately from a real failure.
+    // Dead code elsewhere, same reasoning as `WineNotFound` above.
+    #[cfg_attr(not(target_os = "linux"), allow(dead_code))]
+    #[error("credential store unavailable: {0}")]
+    CredentialStoreUnavailable(String),
+
     #[error("{0}")]
     Internal(String),
 }
@@ -91,6 +98,7 @@ impl AppError {
             AppError::Io(_) => "io_error",
             AppError::Db(_) => "db_error",
             AppError::Crypto(_) => "crypto_error",
+            AppError::CredentialStoreUnavailable(_) => "credential_store_unavailable",
             AppError::Internal(_) => "internal_error",
         }
     }

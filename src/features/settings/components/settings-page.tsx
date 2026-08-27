@@ -64,7 +64,8 @@ function gameFolderPlaceholder(linuxLaunchMode: LinuxLaunchMode): string {
 /** Renders the screen described in the file header. */
 export function SettingsPage() {
   const { settings, loading } = useSettings();
-  const { stayUnlockedEnabled, disableStayUnlocked } = useVault();
+  const { stayUnlockedEnabled, stayUnlockedSupported, disableStayUnlocked } =
+    useVault();
   const [locating, setLocating] = useState(false);
   const [browsing, setBrowsing] = useState(false);
   const [changePassphraseOpen, setChangePassphraseOpen] = useState(false);
@@ -179,10 +180,11 @@ export function SettingsPage() {
           >
             Change passphrase
           </Button>
-          {platform() === "windows" && (
+          {(platform() === "windows" ||
+            (platform() === "linux" && stayUnlockedSupported)) && (
             <SettingRow
               checked={stayUnlockedEnabled}
-              description="Skip your passphrase on future launches. Anyone who can log into this Windows account will be able to open your vault."
+              description="Skip your passphrase on future launches. Anyone who can log into this account will be able to open your vault."
               label="Stay unlocked"
               onCheckedChange={(checked) => {
                 if (checked) {
