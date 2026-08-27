@@ -51,7 +51,7 @@ export default function App() {
             // customization point, via SidebarProvider's style prop) - our
             // nav's longest label ("Settings") doesn't need nearly that much
             // width, and the default left a lot of empty space next to it.
-            style={{ "--sidebar-width": "10rem" } as CSSProperties}
+            style={{ "--sidebar-width": "12rem" } as CSSProperties}
           >
             <TitleBar />
             {/* contain-layout makes this div (not the true window) the
