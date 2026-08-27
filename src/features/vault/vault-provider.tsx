@@ -19,6 +19,7 @@ import {
   vaultResumeFromOs,
   vaultSetup,
   vaultStayUnlockedIsEnabled,
+  vaultStayUnlockedIsSupported,
   vaultUnlock,
 } from "./api";
 
@@ -47,8 +48,10 @@ interface VaultContextValue {
   reset: () => Promise<void>;
   setup: (passphrase: string) => Promise<void>;
   status: VaultStatus;
-  /** Whether an OS-protected DEK is currently persisted (Windows only for now). */
+  /** Whether an OS-protected DEK is currently persisted. */
   stayUnlockedEnabled: boolean;
+  /** Whether this platform's OS-backed storage is actually reachable right now. */
+  stayUnlockedSupported: boolean;
   unlock: (passphrase: string) => Promise<void>;
 }
 
@@ -59,6 +62,9 @@ export function VaultProvider({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<VaultStatus>("checking");
   const [recoveryKey, setRecoveryKey] = useState<string | null>(null);
   const [stayUnlockedEnabled, setStayUnlockedEnabled] = useState(false);
+  // Defaults false (not true) so the Linux toggle never flashes visible
+  // then disappears while the Secret Service probe is still resolving.
+  const [stayUnlockedSupported, setStayUnlockedSupported] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -82,9 +88,10 @@ export function VaultProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  // Keeps stayUnlockedEnabled in sync with the backend whenever the vault
-  // becomes unlocked, rather than threading a refetch through every action
-  // that can reach "unlocked" (setup/unlock/recover/resume) individually.
+  // Keeps stayUnlockedEnabled/stayUnlockedSupported in sync with the backend
+  // whenever the vault becomes unlocked, rather than threading a refetch
+  // through every action that can reach "unlocked" (setup/unlock/recover/
+  // resume) individually.
   useEffect(() => {
     if (status !== "unlocked") {
       return;
@@ -93,6 +100,11 @@ export function VaultProvider({ children }: { children: ReactNode }) {
     vaultStayUnlockedIsEnabled().then((enabled) => {
       if (!cancelled) {
         setStayUnlockedEnabled(enabled);
+      }
+    });
+    vaultStayUnlockedIsSupported().then((supported) => {
+      if (!cancelled) {
+        setStayUnlockedSupported(supported);
       }
     });
     return () => {
@@ -172,6 +184,7 @@ export function VaultProvider({ children }: { children: ReactNode }) {
         reset,
         lock,
         stayUnlockedEnabled,
+        stayUnlockedSupported,
         enableStayUnlocked,
         disableStayUnlocked,
       }}

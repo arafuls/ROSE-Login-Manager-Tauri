@@ -100,6 +100,11 @@ export function vaultStayUnlockedIsEnabled(): Promise<boolean> {
   return invoke("vault_stay_unlocked_is_enabled");
 }
 
+/** Whether this platform's OS-backed storage is actually reachable right now. */
+export function vaultStayUnlockedIsSupported(): Promise<boolean> {
+  return invoke("vault_stay_unlocked_is_supported");
+}
+
 /** Re-verifies the passphrase, then persists an OS-protected copy of the DEK. */
 export async function vaultEnableStayUnlocked(
   passphrase: string

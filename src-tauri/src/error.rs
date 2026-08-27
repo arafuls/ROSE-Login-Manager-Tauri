@@ -66,6 +66,17 @@ pub enum AppError {
     #[error("cryptographic error: {0}")]
     Crypto(String),
 
+    // Only ever produced by the Linux Secret Service backend (`os_credential`)
+    // when the keyring daemon/collection is transiently unreachable, not when
+    // a stored secret is actually gone - `vault_resume_from_os` intercepts
+    // this specifically to avoid treating a momentary D-Bus hiccup the same
+    // as a permanent failure (which would wrongly wipe a still-valid entry).
+    // Genuinely unreachable dead code on every other target, same reasoning
+    // as `WineNotFound` above.
+    #[cfg_attr(not(target_os = "linux"), allow(dead_code))]
+    #[error("credential store unavailable: {0}")]
+    CredentialStoreUnavailable(String),
+
     #[error("{0}")]
     Internal(String),
 }
@@ -91,6 +102,7 @@ impl AppError {
             AppError::Io(_) => "io_error",
             AppError::Db(_) => "db_error",
             AppError::Crypto(_) => "crypto_error",
+            AppError::CredentialStoreUnavailable(_) => "credential_store_unavailable",
             AppError::Internal(_) => "internal_error",
         }
     }

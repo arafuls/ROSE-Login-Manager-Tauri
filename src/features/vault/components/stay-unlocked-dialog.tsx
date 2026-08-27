@@ -84,8 +84,7 @@ export function StayUnlockedDialog({
           <DialogTitle>Stay unlocked</DialogTitle>
           <DialogDescription>
             Future launches will skip your passphrase entirely. Anyone who can
-            log into this Windows account will be able to open your vault
-            without it.
+            log into this account will be able to open your vault without it.
           </DialogDescription>
         </DialogHeader>
 
