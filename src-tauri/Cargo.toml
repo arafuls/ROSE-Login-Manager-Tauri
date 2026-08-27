@@ -72,11 +72,8 @@ tauri-plugin-window-state = "2.4.1"
 winreg = "0.52"
 windows = { version = "=0.61.3", features = ["Win32_UI_WindowsAndMessaging", "Win32_Foundation", "Win32_Security_Cryptography"] }
 
-# Linux "stay unlocked": freedesktop.org Secret Service (GNOME Keyring/KWallet)
-# via the synchronous D-Bus backend only - no async runtime pulled in, and
-# deliberately not the `linux-native` (kernel keyutils) feature, which would
-# add a fallback tier this project has explicitly decided isn't worth the
-# complexity for a low-stakes convenience feature. Pinned to the 3.x line -
-# v4 is a from-scratch rewrite with an incompatible API.
+# Linux "stay unlocked" via Secret Service, sync D-Bus only - no async
+# runtime, no kernel-keyutils fallback (out of scope). Pinned to 3.x; v4
+# is an incompatible rewrite.
 [target.'cfg(target_os = "linux")'.dependencies]
 keyring = { version = "3", default-features = false, features = ["sync-secret-service"] }

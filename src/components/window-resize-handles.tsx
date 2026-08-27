@@ -1,14 +1,10 @@
 /**
- * Invisible edge/corner drag regions that let the undecorated window
- * (`decorations: false` in tauri.conf.json) be resized.
+ * Invisible edge/corner drag regions letting the undecorated window
+ * (`decorations: false`) be resized.
  *
- * Windows' windowing backend hit-tests and resizes undecorated windows
- * automatically - no app code needed. Linux's GTK backend does not: once
- * native decorations are off, GTK has no resize grip of its own, and
- * without something like this the window becomes completely unresizable.
- * Rendered only where it's actually needed (see the `platform` check at the
- * call site in src/app/index.tsx) so Windows keeps its existing OS-native
- * behavior untouched.
+ * Windows' backend hit-tests undecorated windows automatically; GTK
+ * (Linux) doesn't, leaving the window unresizable without this. Rendered
+ * only where needed - see the platform check in src/app/index.tsx.
  */
 
 import { getCurrentWindow } from "@tauri-apps/api/window";

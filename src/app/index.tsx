@@ -30,10 +30,8 @@ export default function App() {
   return (
     <AppProvider>
       <VaultProvider>
-        {/* Spans the true window bounds (unlike SidebarProvider below, which
-            is clipped to the rounded card) so WindowResizeHandles' edge/
-            corner regions can sit right at the real window edges, including
-            the transparent corner cutouts outside the rounded card itself. */}
+        {/* Spans the true window bounds, unlike the clipped SidebarProvider
+            below, so WindowResizeHandles can sit at the real window edges. */}
         <div className="relative h-screen w-screen">
           {/* SidebarProvider lives here (not down in root.tsx) so TitleBar's
               sidebar-toggle button can reach the same useSidebar() context as
@@ -63,9 +61,7 @@ export default function App() {
               <AppRouter />
             </div>
           </SidebarProvider>
-          {/* Windows already resizes undecorated windows on its own - see
-              WindowResizeHandles' own doc comment for why this is only
-              needed elsewhere. */}
+          {/* Windows resizes undecorated windows natively - see WindowResizeHandles. */}
           {!isWindows && <WindowResizeHandles />}
         </div>
       </VaultProvider>

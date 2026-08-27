@@ -89,9 +89,8 @@ export function VaultProvider({ children }: { children: ReactNode }) {
   }, []);
 
   // Keeps stayUnlockedEnabled/stayUnlockedSupported in sync with the backend
-  // whenever the vault becomes unlocked, rather than threading a refetch
-  // through every action that can reach "unlocked" (setup/unlock/recover/
-  // resume) individually.
+  // on unlock, rather than threading a refetch through every action that
+  // can reach "unlocked" individually.
   useEffect(() => {
     if (status !== "unlocked") {
       return;

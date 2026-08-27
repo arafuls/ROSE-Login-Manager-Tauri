@@ -1,32 +1,17 @@
 //! OS-level protection for the vault's "stay unlocked" DEK cache.
 //!
-//! On Windows, backed by DPAPI (`CryptProtectData`/`CryptUnprotectData`),
-//! which ties protection to the Windows login rather than a secret this app
-//! has to manage - a normal user-initiated password change re-keys it
-//! automatically, but an admin-initiated *reset* (not a change) can
-//! invalidate it, which surfaces here as an ordinary `unprotect` failure for
-//! the caller to handle (see `commands::vault::vault_resume_from_os`'s
-//! self-heal). `CRYPTPROTECT_UI_FORBIDDEN` is always set so this never pops
-//! OS UI; `CRYPTPROTECT_LOCAL_MACHINE` is deliberately never set, so the
-//! protection stays tied to the current Windows user, not the machine.
+//! Windows: DPAPI (`CryptProtectData`/`CryptUnprotectData`), tied to the
+//! Windows login. A password *reset* (not a change) invalidates it -
+//! surfaces as an `unprotect` failure, see `vault_resume_from_os`.
 //!
-//! On Linux, backed by the freedesktop.org Secret Service API (GNOME
-//! Keyring/KWallet) via the `keyring` crate's synchronous D-Bus backend.
-//! Secret Service is itself a storage mechanism, unlike DPAPI which is a
-//! pure encrypt/decrypt primitive - `protect` writes the DEK directly into
-//! the keyring and returns a constant placeholder purely to satisfy
-//! `vault_session`'s `NOT NULL` blob column, and `unprotect` ignores its
-//! blob argument and reads the real DEK back from the keyring directly. Only
-//! the synchronous Secret Service backend is used - no fallback to the
-//! Linux kernel keyring or systemd-creds/TPM, which were deliberately ruled
-//! out as disproportionate complexity for a low-stakes convenience feature.
-//! Secret Service can be transiently unreachable (daemon not yet started at
-//! login, collection still locked) well before a stored secret is actually
-//! gone, unlike DPAPI's always-permanent failures - see
-//! `AppError::CredentialStoreUnavailable`'s doc comment for how callers are
-//! expected to tell the two apart.
+//! Linux: Secret Service (GNOME Keyring/KWallet) via sync D-Bus only - no
+//! kernel keyring or systemd-creds/TPM fallback. It's storage, not just
+//! encrypt/decrypt, so `protect`/`unprotect` read/write the DEK directly
+//! and use a placeholder blob to satisfy `vault_session`'s schema.
+//! Transient unreachability is distinct from a dead secret - see
+//! `AppError::CredentialStoreUnavailable`.
 //!
-//! Not yet implemented for any other platform - see the stubs at the bottom.
+//! Not implemented elsewhere - see the stubs below.
 
 use crate::error::AppResult;
 
@@ -67,9 +52,8 @@ pub fn protect(data: &[u8]) -> AppResult<Vec<u8>> {
     }
 }
 
-/// Reverses [`protect`]. Fails if `blob` wasn't produced by this Windows user
-/// account's DPAPI protection, or if that protection has since been
-/// invalidated (see the module doc comment).
+/// Reverses [`protect`] - fails if `blob` wasn't produced by this account's
+/// DPAPI, or that protection has since been invalidated (module doc).
 #[cfg(windows)]
 pub fn unprotect(blob: &[u8]) -> AppResult<Vec<u8>> {
     use windows::Win32::Foundation::{LocalFree, HLOCAL};
@@ -108,9 +92,8 @@ pub fn clear() -> AppResult<()> {
 const LINUX_SERVICE: &str = "rose-login-manager-tauri";
 #[cfg(target_os = "linux")]
 const LINUX_ACCOUNT: &str = "vault-dek";
-/// Returned by [`protect`] in place of real ciphertext - see the module doc
-/// comment for why Secret Service doesn't produce one. Never used to recover
-/// anything; its only job is satisfying `vault_session`'s `NOT NULL` column.
+/// Placeholder returned by [`protect`] instead of real ciphertext, just to
+/// satisfy `vault_session`'s `NOT NULL` column - never used to recover anything.
 #[cfg(target_os = "linux")]
 const LINUX_PLACEHOLDER: &[u8] = b"secret-service";
 
@@ -129,11 +112,9 @@ pub fn protect(data: &[u8]) -> AppResult<Vec<u8>> {
     Ok(LINUX_PLACEHOLDER.to_vec())
 }
 
-/// Ignores `_blob` and reads the DEK directly out of Secret Service. Maps a
-/// transiently-unreachable keyring daemon/collection to
-/// [`AppError::CredentialStoreUnavailable`] rather than the generic
-/// `AppError::Crypto` other failures use, so `vault_resume_from_os` can tell
-/// "try again later" apart from "this is permanently gone."
+/// Ignores `_blob`, reading the DEK straight from Secret Service. Maps a
+/// transiently-unreachable daemon to `CredentialStoreUnavailable` (not
+/// `Crypto`), so callers can tell "try again" from "gone for good."
 #[cfg(target_os = "linux")]
 pub fn unprotect(_blob: &[u8]) -> AppResult<Vec<u8>> {
     use crate::error::AppError;
@@ -149,11 +130,9 @@ pub fn unprotect(_blob: &[u8]) -> AppResult<Vec<u8>> {
     })
 }
 
-/// A real probe against the actual entry this feature uses - the `keyring`
-/// crate has no dedicated "is a backend available" API. `NoEntry` (nothing
-/// stored yet) counts as supported: it means Secret Service itself answered,
-/// just with nothing there yet, which is the expected state before this
-/// feature has ever been enabled.
+/// Probes the real entry - `keyring` has no "is available" API. `NoEntry`
+/// still counts as supported: Secret Service answered, just with nothing
+/// stored yet (the expected state before this is ever enabled).
 #[cfg(target_os = "linux")]
 pub fn is_supported() -> bool {
     use keyring::{Entry, Error as KeyringError};
@@ -164,11 +143,9 @@ pub fn is_supported() -> bool {
     }
 }
 
-/// Deletes the Secret Service entry, if any. A failed best-effort cleanup
-/// here must never block the local lock/reset/setup action the user actually
-/// asked for, so every outcome other than success is logged and swallowed
-/// rather than propagated - worst case, one orphaned entry lingers until the
-/// next successful clear.
+/// Deletes the Secret Service entry, if any. Never propagates failures - a
+/// bad remote cleanup must not block the local action the user asked for;
+/// worst case, one orphaned entry lingers until the next clear.
 #[cfg(target_os = "linux")]
 pub fn clear() -> AppResult<()> {
     use keyring::{Entry, Error as KeyringError};
@@ -180,10 +157,8 @@ pub fn clear() -> AppResult<()> {
     Ok(())
 }
 
-/// "Stay unlocked" isn't implemented on this platform - unreachable from the
-/// UI (the Settings toggle only ever appears on Windows, or on Linux after
-/// [`is_supported`] confirms Secret Service is reachable), so this is
-/// defense-in-depth rather than a real user-facing path.
+/// "Stay unlocked" isn't implemented on this platform - unreachable from
+/// the UI, so this is defense-in-depth, not a real user-facing path.
 #[cfg(not(any(windows, target_os = "linux")))]
 pub fn protect(_data: &[u8]) -> AppResult<Vec<u8>> {
     Err(crate::error::AppError::Internal(

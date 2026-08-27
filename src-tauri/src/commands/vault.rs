@@ -164,10 +164,9 @@ pub fn vault_stay_unlocked_is_enabled(state: State<AppState>) -> AppResult<bool>
     vault_session::is_enabled(&conn)
 }
 
-/// Whether this platform's OS-backed storage is actually reachable right
-/// now - drives whether the frontend even offers the "stay unlocked" toggle.
-/// Always `true` on Windows (DPAPI). On Linux, a real probe against Secret
-/// Service, since there's no other way to know a keyring daemon is running.
+/// Whether this platform's OS-backed storage is reachable right now - gates
+/// whether the frontend offers the toggle. Always `true` on Windows; a real
+/// Secret Service probe on Linux.
 #[tauri::command]
 pub fn vault_stay_unlocked_is_supported() -> bool {
     os_credential::is_supported()
@@ -213,12 +212,9 @@ pub fn vault_resume_from_os(state: State<AppState>) -> AppResult<bool> {
             *state.vault_key.lock().unwrap() = Some(dek);
             Ok(true)
         }
-        // The credential store itself is unreachable (e.g. a Linux keyring
-        // daemon that hasn't started yet) rather than the stored secret
-        // being gone - unlike every other failure here, this one must NOT
-        // clear the row, or a momentary D-Bus hiccup at login would
-        // permanently and needlessly reset the user's "stay unlocked" setup.
-        // Windows never produces this variant, so this arm is a no-op there.
+        // Transient (e.g. keyring daemon not started yet), not a dead
+        // secret - don't clear the row, or a momentary hiccup would reset
+        // the setting.
         Err(AppError::CredentialStoreUnavailable(_)) => Ok(false),
         Err(_) => {
             clear_stay_unlocked(&conn)?;
@@ -227,12 +223,9 @@ pub fn vault_resume_from_os(state: State<AppState>) -> AppResult<bool> {
     }
 }
 
-/// Clears "stay unlocked" both locally (the `vault_session` row) and, where
-/// the platform has one, the underlying OS-side secret (e.g. a Linux Secret
-/// Service entry) - shared by every place that turns the feature off, so
-/// none of them can forget the OS-side half and leave an orphaned secret
-/// behind. `os_credential::clear`'s own failures are always non-fatal (see
-/// its doc comment), so this only ever fails if the local DB write does.
+/// Clears "stay unlocked" locally and, where applicable, the OS-side
+/// secret - shared so no call site forgets the OS half.
+/// `os_credential::clear` failures are non-fatal.
 fn clear_stay_unlocked(conn: &rusqlite::Connection) -> AppResult<()> {
     vault_session::clear(conn)?;
     let _ = os_credential::clear();
