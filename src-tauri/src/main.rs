@@ -82,6 +82,7 @@ fn main() {
             commands::process::profiles_launch,
             commands::process::client_launch_default,
             commands::process::updater_force_recheck,
+            commands::app::app_is_portable_install,
             commands::settings::settings_get,
             commands::settings::settings_update,
             commands::settings::settings_find_game_folder,

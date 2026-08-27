@@ -8,7 +8,7 @@ import { relaunch } from "@tauri-apps/plugin-process";
 import type { Update } from "@tauri-apps/plugin-updater";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { appCheckForUpdate } from "./api";
+import { appCheckForUpdate, appIsPortableInstall } from "./api";
 
 const TOAST_ID = "app-update";
 
@@ -39,11 +39,19 @@ async function downloadAndInstall(update: Update) {
   await relaunch();
 }
 
-/** Shows a toast offering to install `update`, wired to `downloadAndInstall`. */
-function offerUpdate(update: Update) {
+/**
+ * Shows a toast offering to install `update`, wired to `downloadAndInstall`.
+ * A portable install gets a different description - it installs a separate
+ * copy elsewhere instead of replacing the running exe.
+ */
+async function offerUpdate(update: Update) {
+  const portable = await appIsPortableInstall().catch(() => false);
+
   toast(`Update available: v${update.version}`, {
     id: TOAST_ID,
-    description: "Downloads and restarts the app once installed.",
+    description: portable
+      ? "This installs a separate copy at %LOCALAPPDATA%\\ROSE Login Manager - it won't replace this file."
+      : "Downloads and restarts the app once installed.",
     action: {
       label: "Update",
       onClick: () => {
@@ -78,9 +86,9 @@ export function useAppUpdateCheck() {
     checked.current = true;
 
     appCheckForUpdate()
-      .then((update) => {
+      .then(async (update) => {
         if (update) {
-          offerUpdate(update);
+          await offerUpdate(update);
         }
       })
       .catch((error) => {
@@ -102,7 +110,7 @@ export function useManualUpdateCheck() {
     try {
       const update = await appCheckForUpdate();
       if (update) {
-        offerUpdate(update);
+        await offerUpdate(update);
       } else {
         toast.success("You're on the latest version");
       }
