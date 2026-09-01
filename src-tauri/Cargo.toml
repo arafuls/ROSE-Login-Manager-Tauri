@@ -31,7 +31,7 @@ rusqlite = { version = "0.31", features = ["bundled"] }
 # Crypto: Argon2id passphrase -> key derivation, AES-256-GCM authenticated encryption
 argon2 = "0.5"
 aes-gcm = "0.10"
-rand = "0.8"
+rand = "0.10"
 base64 = "0.22"
 
 # Settings / game config
